@@ -22,9 +22,6 @@ sim.mixture.2comp <- function(n, pi0, mu0, sd0, mu1, sd1){
 }
 
 
-# TODO :
-#  - grouped signals
-
 
 
 
