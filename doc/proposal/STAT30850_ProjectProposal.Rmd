@@ -13,11 +13,11 @@ output: pdf_document
 
 # Overview
 
-In many scenarios we can imagine that data is constantly streaming in as a result of a time-dependent generating process. We would like to conduct hypothesis testing on the data points a s they are streaming in, while still retaining a adequate FDR control. Our proposal is to develop a Bayesian method for FDR control in this online setting.  
+There are many scenarios where hypothesis testing is peformed sequentially as new data becomes availialbe through time. Streaming data is common in many modern applications such as high frequency stock trading, novel results from clinical trials, and large-scale adverstisment experiments conduncted by Google and Facebook. In this context one would like to test multiple hypothesis on the data as its streaming in, while still retaining adequate FDR control, similalry to approaches developed for non-streaming data. Here we propose to extend and apply Bayesian methods for FDR control in an online testing setting. 
 
 # Initial Proposal of Model
 
-Suppose that time $t \in \{0, 1, ...,\tau, ...\}$, and that we have statistcs $X_t$ independently  coming from the following mixture distribution: $$X_t \sim \pi_0\cdot N(\mu_0, \sigma^2_0) + (1-\pi_0)\cdot N(\mu_1, \sigma^2_1)$$
+Suppose that time $t \in \{0, 1, ...,\tau \}$, and that test statistcs $X_t$ are independently distributed under the mixture model: $$X_t \sim \pi_0\cdot N(\mu_0, \sigma^2_0) + (1-\pi_0)\cdot N(\mu_1, \sigma^2_1)$$
 
 We will further simplify this and obtain the p-values for each of the data points $P_t$. We wish to use all datapoints prior to $\tau$ to estimate the proportion of nulls ($\pi_0$) before we switch to a Bayesian FDR method (such as Storey's method). Note that as we proceed through the data stream, all of the p-values $P_0, ..., P_t$ can be used to update our estimate of the true proportion of nulls. Note that in the above setting we assume that the true proportion of nulls ($\pi_0$) does not vary with time. We also define the rejection region of the p-values as [0,$\gamma$]. 
 
