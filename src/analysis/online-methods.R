@@ -1,7 +1,6 @@
 
-#---------------------------
-# Description: 
-#   Estimate pi0 (ala Storey)
+#--------------------------- 
+# Estimate pi0 (ala Storey)
 # Args:
 #   p = current vector of 
 #     p-values
@@ -13,6 +12,15 @@ estimate.nulls <- function(p, lambda = 0.5){
   return(pi0)
 }
 
+
+# --------------------------
+# Sequentially Estimate pi0
+# Args:
+# 	p = full vector of p-values
+# 	lambda = lambda value from
+# 			Storey 2002
+# 	tau = min. starting point
+# --------------------------
 estimate.nulls.sequential <- function(p, lambda=0.5, tau=100){
   if (length(p) < tau){stop()}
   n <- length(p)
