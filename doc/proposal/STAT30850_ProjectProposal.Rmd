@@ -19,7 +19,9 @@ There are many scenarios where hypothesis testing is peformed sequentially as ne
 
 Suppose that time $t \in \{0, 1,\dots,\tau \}$, and that test statistcs $X_t$, from some experiment, are independently and indentically distributed under the mixture model: $$X_t \sim \pi_0\cdot N(\mu_0, \sigma^2_0) + (1-\pi_0)\cdot N(\mu_1, \sigma^2_1)$$
 
-For instance we could imagine $X_t$ are Z scores such that $\mu_0 = 0$ and $\sigma^2 = 1$. Our goal is to estimate the mixture model $\{\pi_0, \mu_1, \sigma_1 \}$ for each $t$ as we oberseve a new $X_t$. We plan to control for FDR at the appropriate level $\alpha$ under the estimated mixture model at time $t$ , for simplicity call it $M_t$. 
+<!-- Might be a little confusing to have Z-scores as X_t? -->
+
+For instance we could imagine $X_t$ are Z scores such that $\mu_0 = 0$ and $\sigma_0^2 = 1$. Our goal is to estimate the mixture model $\{\pi_0, \mu_1, \sigma_1 \}$ for each $t$ as we observe a new $X_t$. We plan to control for FDR at the appropriate level $\alpha$ under the estimated mixture model at time $t$ , for simplicity call it $M_t$. 
 
 # Approach 
 
@@ -27,22 +29,25 @@ We propose to use Markov Chain Monte Carlo (MCMC) to sample from the posterior d
 
 $$\pi_0 \sim Beta(1, 1)$$
 $$\mu_1 \sim Normal()$$
-$$\sigma_2 \sim Normal()$$
+$$\sigma_1^2 \sim Normal()$$
 
-If $Z$ is an indicator for $X_t$ being a signal then $P(Z = 0) = \pi_0$ and $P(Z = 1) = 1 - \pi_0$. From the above mixture we know:
+If $Z$ is a latent indicator for $X_t$ being a signal then $P(Z = 0) = \pi_0$ and $P(Z = 1) = 1 - \pi_0$. From the above mixture we know:
 
 $$X_t \mid Z = 0 \sim N(0, 1)$$
-$$X_t \mid Z = 1 \sim N(\mu_1, \sigma_1)$$
+$$X_t \mid Z = 1 \sim N(\mu_1, \sigma^2_1)$$
 
 If we observe $t$ test statistics at time $t$ we can compute the likelihood of the model as:
 
 $$L(M_t) = P(X_1, \dots, X_t \mid \pi_0, \mu_1, \sigma_1) = \prod_{i=1}^{t}(\pi_0\cdot P(X_i \mid Z = 0) + (1 - \pi_0)\cdot P(X_i \mid Z = 1))$$ 
 
-From bayes theorom $P(\pi_0, \mu_1, \sigma_1 \mid X_1, \dots, X_t) \propto P(\pi_0)\cdot P(\mu_1)\cdot P(\sigma_1)\cdot P(X_1, \dots, X_t \mid \pi_0, \mu_1, \sigma_1)$
+From Bayes Theorem $P(\pi_0, \mu_1, \sigma_1 \mid X_1, \dots, X_t) \propto P(\pi_0)\cdot P(\mu_1)\cdot P(\sigma_1)\cdot P(X_1, \dots, X_t \mid \pi_0, \mu_1, \sigma_1)$
+
+
+<!-- TODO : might want to change this section here as well since   -->
 
 # Initial Proposal of Model
 
-Suppose that time $t \in \{0, 1, ...,\tau \}$, and that test statistcs $X_t$ are independently distributed under the mixture model: $$X_t \sim \pi_0\cdot N(\mu_0, \sigma^2_0) + (1-\pi_0)\cdot N(\mu_1, \sigma^2_1)$$
+Suppose that time $t \in \{0, 1, ...,\tau \}$, and that test statistics $X_t$ are independently distributed under the mixture model: $$X_t \sim \pi_0\cdot N(\mu_0, \sigma^2_0) + (1-\pi_0)\cdot N(\mu_1, \sigma^2_1)$$
 
 We will further simplify this and obtain the p-values for each of the data points $P_t$. We wish to use all datapoints prior to $\tau$ to estimate the proportion of nulls ($\pi_0$) before we switch to a Bayesian FDR method (such as Storey's method). Note that as we proceed through the data stream, all of the p-values $P_0, ..., P_t$ can be used to update our estimate of the true proportion of nulls. Note that in the above setting we assume that the true proportion of nulls ($\pi_0$) does not vary with time. We also define the rejection region of the p-values as [0,$\gamma$]. 
 
@@ -60,14 +65,31 @@ $$FDR^t_\lambda(\gamma) = \frac{\hat{\pi}^t_0(\lambda)\gamma}{(1-\lambda)(R(\gam
 
 $$pFDR^t_\lambda(\gamma) = \frac{\hat{\pi}^t_0(\lambda)\gamma}{(1-\lambda)(R(\gamma) \lor 1)(1 - (1-\gamma)^t)}$$
 
+# Z-Scores Simulated from Mixture
+
+```{r, echo=FALSE}
+source("../../src/simulation/simulate_mixture.R")
+N <- 5000
+test.df <- sim.mixture.2comp(N, 0.90, mu1 = 3, sigma1=1)
+t <- seq(1,N)
+par(mfrow=c(1,2))
+plot(t, test.df$Z, type='l', ylab="Z", xlab="t")
+hist(test.df$Z, breaks=100, main="", xlab="Z")
+```
+
+Above is a time-series of independent samples of Z-scores that are from the mixture distribution with parameters $\pi_0 = 0.90, \mu_1 = 3, \sigma_1^2 = 1$.  
+
+
 # Questions Proposed
+
+<!-- TODO : Might have to revise the sections here -->
 
 \begin{itemize}
   \item $\tau$ : which time-step to switch to the Bayesian FDR model? What model to use prior to this model? Or should we not even switch and just reject everything before $\tau$?
   \item $\pi_0$ : How many nulls are there relative to the signals within the data? Are we able to detect the signals even when there are very few of them?
   \item $\mu_1 >> \mu_0$ : The relative strength of the signals vs. the nulls. How weakly can we classify signals?
   \item Calculating $\lambda_{best}$ : Storey formulates a method (Section 9) to compute the optimal value of $\lambda$ for a given set of data. How could recalculating this value according to streaming data affect FDR? Recalculate for most recent "chunk" of time or aggregate through time?
-  \item Clustering of Signals : How does the method react to clusters of signals together?
+  \item Clustering of Signals : How does the method react to clusters of signals together? (i.e. what if there is some time-dependency in the transitions possible?)
 \end{itemize}
 
 # References
