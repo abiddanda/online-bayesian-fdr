@@ -17,53 +17,34 @@ There are many scenarios where hypothesis testing is peformed sequentially as ne
 
 # Setup
 
-Suppose that time $t \in \{0, 1,\dots,\tau \}$, and that test statistcs $X_t$, from some experiment, are independently and indentically distributed under the mixture model: $$X_t \sim \pi_0\cdot N(\mu_0, \sigma^2_0) + (1-\pi_0)\cdot N(\mu_1, \sigma^2_1)$$
+Suppose that time $t \in \{0, 1,\dots, n \}$, and that test statistcs $X_t$, from some experiment, are independently and indentically distributed under the mixture model: $$X_t \sim \pi_0\cdot N(\mu_0, \sigma^2_0) + (1-\pi_0)\cdot N(\mu_1, \sigma^2_1)$$
 
 <!-- Might be a little confusing to have Z-scores as X_t? -->
 
-For instance we could imagine $X_t$ are Z scores such that $\mu_0 = 0$ and $\sigma_0^2 = 1$. Our goal is to estimate the mixture model $\{\pi_0, \mu_1, \sigma_1 \}$ for each $t$ as we observe a new $X_t$. We plan to control for FDR at the appropriate level $\alpha$ under the estimated mixture model at time $t$ , for simplicity call it $M_t$. 
+For instance we could imagine $X_t$ are Z scores such that $\mu_0 = 0$ and $\sigma_0^2 = 1$. Our goal is to estimate the mixture model $\{\pi_0, \mu_1, \sigma^2_1 \}$ for each $t$ as we observe a new $X_t$. We plan to control for FDR at the appropriate level $\alpha$ under the estimated mixture model at time $t$, for simplicity call it $M_t$. 
 
 # Approach 
 
-We propose to use Markov Chain Monte Carlo (MCMC) to sample from the posterior distributions of $\{\pi_0, \mu_1, \sigma_1 \}$ allowing us to do inference of $M_t$ and providing measures of uncertity in these parameters at each time step or at some interval of time. To this end we set priors distributions on $\{\pi_0, \mu_1, \sigma_1 \}$:
+We propose to use Markov Chain Monte Carlo (MCMC) to sample from the posterior distributions of $\{\pi_0, \mu_1, \sigma^2_1 \}$ allowing us to do inference of $M_t$ and providing measures of uncertity in these parameters at each time step or at some interval of time. To this end we set priors distributions on $\{\pi_0, \mu_1, \sigma^2_1 \}$:
 
-$$\pi_0 \sim Beta(1, 1)$$
-$$\mu_1 \sim Normal()$$
-$$\sigma_1^2 \sim Normal()$$
+$$\pi_0 \sim Beta(\alpha, \beta)$$
+$$\mu_1 \sim Normal(\mu_s, \tau_s)$$
+$$\sigma_1^2 \sim Inverse-Gamma(\alpha^{*}, \beta^{*})$$
 
 If $Z$ is a latent indicator for $X_t$ being a signal then $P(Z = 0) = \pi_0$ and $P(Z = 1) = 1 - \pi_0$. From the above mixture we know:
 
 $$X_t \mid Z = 0 \sim N(0, 1)$$
 $$X_t \mid Z = 1 \sim N(\mu_1, \sigma^2_1)$$
 
-If we observe $t$ test statistics at time $t$ we can compute the likelihood of the model as:
+If we observe $t$ test statistics at time $t$ we can compute the likelihood of the $M_t$ as:
 
 $$L(M_t) = P(X_1, \dots, X_t \mid \pi_0, \mu_1, \sigma_1) = \prod_{i=1}^{t}(\pi_0\cdot P(X_i \mid Z = 0) + (1 - \pi_0)\cdot P(X_i \mid Z = 1))$$ 
 
-From Bayes Theorem $P(\pi_0, \mu_1, \sigma_1 \mid X_1, \dots, X_t) \propto P(\pi_0)\cdot P(\mu_1)\cdot P(\sigma_1)\cdot P(X_1, \dots, X_t \mid \pi_0, \mu_1, \sigma_1)$
+From Bayes Theorem 
 
+$$P(\pi_0, \mu_1, \sigma_1 \mid X_1, \dots, X_t) \propto P(\pi_0)\cdot P(\mu_1)\cdot P(\sigma_1)\cdot P(X_1, \dots, X_t \mid \pi_0, \mu_1, \sigma_1)$$
 
-<!-- TODO : might want to change this section here as well since   -->
-
-# Initial Proposal of Model
-
-Suppose that time $t \in \{0, 1, ...,\tau \}$, and that test statistics $X_t$ are independently distributed under the mixture model: $$X_t \sim \pi_0\cdot N(\mu_0, \sigma^2_0) + (1-\pi_0)\cdot N(\mu_1, \sigma^2_1)$$
-
-We will further simplify this and obtain the p-values for each of the data points $P_t$. We wish to use all datapoints prior to $\tau$ to estimate the proportion of nulls ($\pi_0$) before we switch to a Bayesian FDR method (such as Storey's method). Note that as we proceed through the data stream, all of the p-values $P_0, ..., P_t$ can be used to update our estimate of the true proportion of nulls. Note that in the above setting we assume that the true proportion of nulls ($\pi_0$) does not vary with time. We also define the rejection region of the p-values as [0,$\gamma$]. 
-
-Thus our initial estimate of the proportion of nulls will be (according to Storey):
-
-$$ \hat{\pi}_0^\tau(\lambda) = \frac{\#\{p_i > \lambda\}}{(1-\lambda)\tau}$$
-
-And more generally our updated estimates will be:
-
-$$ \hat{\pi}_0^t(\lambda) = \frac{\#\{p_i > \lambda\}}{(1-\lambda)t}$$
-
-Then we can define our similar data-adaptive FDR and pFDR estimators at time $t > \tau$ as:
-
-$$FDR^t_\lambda(\gamma) = \frac{\hat{\pi}^t_0(\lambda)\gamma}{(1-\lambda)(R(\gamma) \lor 1)}$$
-
-$$pFDR^t_\lambda(\gamma) = \frac{\hat{\pi}^t_0(\lambda)\gamma}{(1-\lambda)(R(\gamma) \lor 1)(1 - (1-\gamma)^t)}$$
+We plan to sample from this posterior distribution using a component-wise Metropolis Hasting algorithim with a symetric proposal distribution and acceptence ratios defined from the above priors and likelihood. We plan to test approach emprically via simulations where we know the true mixture component distributions and propritions as seen below.
 
 # Z-Scores Simulated from Mixture
 
@@ -97,9 +78,14 @@ Above is a time-series of independent samples of Z-scores that are from the mixt
 \item Storey, John. \textit{A direct approach to false discovery rates}. 2002. \textit{Journal of the Royal Statistical Society}
 \end{enumerate}
 
+<!-- TODO : Incoporate into propsed questions
 
 * interval for doing mcmc (gibbs?)
 * think about how 
 * how frequently you want to restimate 
 * doing mcmc on one 
+* compare bayesian pi0 to sequential estimates from Story
+* explore conjugacy of mixture model
+
+-->
 
