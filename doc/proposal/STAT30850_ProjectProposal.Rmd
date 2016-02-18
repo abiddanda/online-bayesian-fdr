@@ -15,6 +15,31 @@ output: pdf_document
 
 There are many scenarios where hypothesis testing is peformed sequentially as new data becomes availialbe through time. Streaming data is common in many modern applications such as high frequency stock trading, novel results from clinical trials, and large-scale adverstisment experiments conduncted by Google and Facebook. In this context one would like to test multiple hypothesis on the data as its streaming in, while still retaining adequate FDR control, similalry to approaches developed for non-streaming data. Here we propose to extend and apply Bayesian methods for FDR control in an online testing setting. 
 
+# Setup
+
+Suppose that time $t \in \{0, 1,\dots,\tau \}$, and that test statistcs $X_t$, from some experiment, are independently and indentically distributed under the mixture model: $$X_t \sim \pi_0\cdot N(\mu_0, \sigma^2_0) + (1-\pi_0)\cdot N(\mu_1, \sigma^2_1)$$
+
+For instance we could imagine $X_t$ are Z scores such that $\mu_0 = 0$ and $\sigma^2 = 1$. Our goal is to estimate the mixture model $\{\pi_0, \mu_1, \sigma_1 \}$ for each $t$ as we oberseve a new $X_t$. We plan to control for FDR at the appropriate level $\alpha$ under the estimated mixture model at time $t$ , for simplicity call it $M_t$. 
+
+# Approach 
+
+We propose to use Markov Chain Monte Carlo (MCMC) to sample from the posterior distributions of $\{\pi_0, \mu_1, \sigma_1 \}$ allowing us to do inference of $M_t$ and providing measures of uncertity in these parameters at each time step or at some interval of time. To this end we set priors distributions on $\{\pi_0, \mu_1, \sigma_1 \}$:
+
+$$\pi_0 \sim Beta(1, 1)$$
+$$\mu_1 \sim Normal()$$
+$$\sigma_2 \sim Normal()$$
+
+If $Z$ is an indicator for $X_t$ being a signal then $P(Z = 0) = \pi_0$ and $P(Z = 1) = 1 - \pi_0$. From the above mixture we know:
+
+$$X_t \mid Z = 0 \sim N(0, 1)$$
+$$X_t \mid Z = 1 \sim N(\mu_1, \sigma_1)$$
+
+If we observe $t$ test statistics at time $t$ we can compute the likelihood of the model as:
+
+$$L(M_t) = P(X_1, \dots, X_t \mid \pi_0, \mu_1, \sigma_1) = \prod_{i=1}^{t}(\pi_0\cdot P(X_i \mid Z = 0) + (1 - \pi_0)\cdot P(X_i \mid Z = 1))$$ 
+
+From bayes theorom $P(\pi_0, \mu_1, \sigma_1 \mid X_1, \dots, X_t) \propto P(\pi_0)\cdot P(\mu_1)\cdot P(\sigma_1)\cdot P(X_1, \dots, X_t \mid \pi_0, \mu_1, \sigma_1)$
+
 # Initial Proposal of Model
 
 Suppose that time $t \in \{0, 1, ...,\tau \}$, and that test statistcs $X_t$ are independently distributed under the mixture model: $$X_t \sim \pi_0\cdot N(\mu_0, \sigma^2_0) + (1-\pi_0)\cdot N(\mu_1, \sigma^2_1)$$
@@ -49,4 +74,10 @@ $$pFDR^t_\lambda(\gamma) = \frac{\hat{\pi}^t_0(\lambda)\gamma}{(1-\lambda)(R(\ga
 \begin{enumerate}
 \item Storey, John. \textit{A direct approach to false discovery rates}. 2002. \textit{Journal of the Royal Statistical Society}
 \end{enumerate}
+
+
+* interval for doing mcmc (gibbs?)
+* think about how 
+* how frequently you want to restimate 
+* doing mcmc on one 
 
