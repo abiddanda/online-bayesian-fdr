@@ -13,11 +13,11 @@ output: pdf_document
 
 # Overview
 
-There are many scenarios where hypothesis testing is peformed sequentially as new data becomes availialbe through time. Streaming data is common in many modern applications such as high frequency stock trading, novel results from clinical trials, and large-scale adverstisment experiments conduncted by Google and Facebook. In this context one would like to test multiple hypothesis on the data as its streaming in, while still retaining adequate FDR control, similalry to approaches developed for non-streaming data. Here we propose to extend and apply Bayesian methods for FDR control in an online testing setting. 
+There are many scenarios where hypothesis testing is performed sequentially as new data becomes available through time. Streaming data is common in many modern applications such as high frequency stock trading, novel results from clinical trials, and large-scale advertisement experiments conducted by Google and Facebook. In this context one would like to test multiple hypotheses on the data as it is streaming in, while still retaining adequate FDR control, similarly to approaches developed for non-streaming data. Here we propose to extend and apply Bayesian methods for FDR control in an online testing setting. 
 
 # Setup
 
-Suppose that time $t \in \{0, 1,\dots, n \}$, and that test statistcs $X_t$, from some experiment, are independently and indentically distributed under the mixture model: $$X_t \sim \pi_0\cdot N(\mu_0, \sigma^2_0) + (1-\pi_0)\cdot N(\mu_1, \sigma^2_1)$$
+Suppose that time $t \in \{0, 1,\dots, n \}$, and that test statistics $X_t$, from some experiment, are independently and identically distributed under the mixture model: $$X_t \sim \pi_0\cdot N(\mu_0, \sigma^2_0) + (1-\pi_0)\cdot N(\mu_1, \sigma^2_1)$$
 
 <!-- Might be a little confusing to have Z-scores as X_t? -->
 
@@ -25,7 +25,7 @@ For instance we could imagine $X_t$ are Z scores such that $\mu_0 = 0$ and $\sig
 
 # Approach 
 
-We propose to use Markov Chain Monte Carlo (MCMC) to sample from the posterior distributions of $\{\pi_0, \mu_1, \sigma^2_1 \}$ allowing us to do inference of $M_t$ and providing measures of uncertity in these parameters at each time step or at some interval of time. To this end we set priors distributions on $\{\pi_0, \mu_1, \sigma^2_1 \}$:
+We propose to use Markov Chain Monte Carlo (MCMC) to sample from the posterior distributions of $\{\pi_0, \mu_1, \sigma^2_1 \}$ allowing us to do inference of $M_t$ and providing measures of uncertainty in these parameters at each time step or at some interval of time. To this end we set priors distributions on $\{\pi_0, \mu_1, \sigma^2_1 \}$:
 
 $$\pi_0 \sim Beta(\alpha, \beta)$$
 $$\mu_1 \sim Normal(\mu_s, \tau_s)$$
@@ -44,18 +44,18 @@ From Bayes Theorem
 
 $$P(\pi_0, \mu_1, \sigma_1 \mid X_1, \dots, X_t) \propto P(\pi_0)\cdot P(\mu_1)\cdot P(\sigma_1)\cdot P(X_1, \dots, X_t \mid \pi_0, \mu_1, \sigma_1)$$
 
-We plan to sample from this posterior distribution using a component-wise Metropolis Hasting algorithim with a symetric proposal distribution and acceptence ratios defined from the above priors and likelihood. We plan to test approach emprically via simulations where we know the true mixture component distributions and propritions as seen below.
+We plan to sample from this posterior distribution using a component-wise Metropolis-Hasting algorithm with a symmetric proposal distribution and acceptance ratios defined from the above priors and likelihood. We plan to test this approach empirically via simulations where we know the true mixture component distributions and proportions as seen below.
 
 # Z-Scores Simulated from Mixture
 
 ```{r, echo=FALSE}
 source("../../src/simulation/simulate_mixture.R")
 N <- 5000
-test.df <- sim.mixture.2comp(N, 0.90, mu1 = 3, sigma1=1)
+test.mixture <- sim.mixture.2comp(N, 0.90, mu1 = 3, sigma1=1)
 t <- seq(1,N)
 par(mfrow=c(1,2))
-plot(t, test.df$Z, type='l', ylab="Z", xlab="t")
-hist(test.df$Z, breaks=100, main="", xlab="Z")
+plot(t, test.mixture$Z, type='l', ylab="Z", xlab="t")
+hist(test.mixture$Z, breaks=100, main="", xlab="Z")
 ```
 
 Above is a time-series of independent samples of Z-scores that are from the mixture distribution with parameters $\pi_0 = 0.90, \mu_1 = 3, \sigma_1^2 = 1$.  
@@ -63,29 +63,13 @@ Above is a time-series of independent samples of Z-scores that are from the mixt
 
 # Questions Proposed
 
-<!-- TODO : Might have to revise the sections here -->
-
 \begin{itemize}
-  \item $\tau$ : which time-step to switch to the Bayesian FDR model? What model to use prior to this model? Or should we not even switch and just reject everything before $\tau$?
+  \item Exploring efficient ways to sample from posterior of the mixture. Potential to sample periodically from the time series, rather than every time-step.  
+  \item Setting $\alpha^*$ to have low FDR at beginning ($ t < \tau$), because of uncertainty in inferred mixture model. Explore methods to be conservative based on credible intervals of the posterior distributions of the parameters. 
   \item $\pi_0$ : How many nulls are there relative to the signals within the data? Are we able to detect the signals even when there are very few of them?
-  \item $\mu_1 >> \mu_0$ : The relative strength of the signals vs. the nulls. How weakly can we classify signals?
-  \item Calculating $\lambda_{best}$ : Storey formulates a method (Section 9) to compute the optimal value of $\lambda$ for a given set of data. How could recalculating this value according to streaming data affect FDR? Recalculate for most recent "chunk" of time or aggregate through time?
-  \item Clustering of Signals : How does the method react to clusters of signals together? (i.e. what if there is some time-dependency in the transitions possible?)
+  \item $\mu_1 >> 0$ : The relative strength of the signals vs. the nulls. How can we classify weak signals?
+  \item Comparison of our Bayesian method against LBOND/LBORD or a sequential version of Storey's method.
+  \item Clustering of Signals : How does the method react to clusters of signals together? Varying levels/direction of correlation amongst signals.
 \end{itemize}
 
-# References
-\begin{enumerate}
-\item Storey, John. \textit{A direct approach to false discovery rates}. 2002. \textit{Journal of the Royal Statistical Society}
-\end{enumerate}
-
-<!-- TODO : Incoporate into propsed questions
-
-* interval for doing mcmc (gibbs?)
-* think about how 
-* how frequently you want to restimate 
-* doing mcmc on one 
-* compare bayesian pi0 to sequential estimates from Story
-* explore conjugacy of mixture model
-
--->
 
