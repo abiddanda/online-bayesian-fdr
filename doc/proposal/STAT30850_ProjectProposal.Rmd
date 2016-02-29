@@ -51,11 +51,11 @@ We plan to sample from this posterior distribution using a component-wise Metrop
 ```{r, echo=FALSE}
 source("../../src/simulation/simulate_mixture.R")
 N <- 5000
-test.df <- sim.mixture.2comp(N, 0.90, mu1 = 3, sigma1=1)
+test.mixture <- sim.mixture.2comp(N, 0.90, mu1 = 3, sigma1=1)
 t <- seq(1,N)
 par(mfrow=c(1,2))
-plot(t, test.df$Z, type='l', ylab="Z", xlab="t")
-hist(test.df$Z, breaks=100, main="", xlab="Z")
+plot(t, test.mixture$Z, type='l', ylab="Z", xlab="t")
+hist(test.mixture$Z, breaks=100, main="", xlab="Z")
 ```
 
 Above is a time-series of independent samples of Z-scores that are from the mixture distribution with parameters $\pi_0 = 0.90, \mu_1 = 3, \sigma_1^2 = 1$.  

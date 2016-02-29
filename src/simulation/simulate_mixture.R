@@ -16,7 +16,8 @@ sim.mixture.2comp <- function(n, pi0, mu0=0, sigma0=1, mu1, sigma1){
 	            FUN = function(x){ifelse(x,rnorm(1,mu1,sigma1), rnorm(1,mu0,sigma0))}, 
 	            FUN.VALUE = 1)
 	pvals <- 2*pnorm(-abs((z-mu0)/sqrt(sigma0)))
-	mixture.df <- data.frame(true_signals = signals, Z=z, P=pvals)
-	return(mixture.df)
+	mixture.output <- list(true_signals = signals, Z=z, Pval=pvals)
+	return(mixture.output)
 }
+
 
