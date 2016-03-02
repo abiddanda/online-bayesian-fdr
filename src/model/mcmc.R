@@ -1,5 +1,3 @@
-source("../simulation/simulate_mixture.R")
-
 
 #' Gibbs sampler to estimate mixture model 
 #' @param X vector of test.statistics at time t
@@ -7,7 +5,7 @@ source("../simulation/simulate_mixture.R")
 #' @param n_burnin number of burn in iterations
 #' @param sampling_interval interval of sampling times
 #' @return 
-gibbs_sampler <- function(X, n_iter, n_burnin, sampling_interval){
+gibbs_sampler <- function(X, n_iter, n_burnin=50, sampling_interval=10){
   n <- length(X)
   
   # intialize params
@@ -45,6 +43,9 @@ gibbs_sampler <- function(X, n_iter, n_burnin, sampling_interval){
     m <- ((alpha_norm * m) + sum(X[z==1])) / (alpha_norm + sum(z == 1))
     mu1 <- rnorm(1, m, 1 / ((alpha_norm + sum(z == 1)) * phi1))
     
+    # Calculating the trace
+    trace[i] <- sum(log(p_z0[which(z==0)])) + sum(log((1-p_z0)[which(z==1)]))
+
     if (i > n_burnin){
       pi0_samples <- c(pi0_samples, pi0)
       phi1_samples <- c(phi1_samples, phi1)
@@ -52,5 +53,7 @@ gibbs_sampler <- function(X, n_iter, n_burnin, sampling_interval){
     }
   }
   return(list(pi0_samples = pi0_samples, phi1_samples = phi1_samples, 
-              mu1_samples = mu1_samples))
+              mu1_samples = mu1_samples, trace=trace))
 }
+
+
