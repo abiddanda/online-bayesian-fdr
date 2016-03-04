@@ -11,13 +11,13 @@ fontsize: 12pt
 output: pdf_document
 ---
 
-## Contents
+# Contents
 
-1. We have explicity written out a Gibbs Sampler to estimate the mixture model. Specifically we estimate the mean and variance of the signals and the proportion of nulls as we are assuming we know the parameters of the null component.   
+1. We have explicitly written out a Gibbs Sampler to estimate the mixture model (see description below). Specifically we estimate the mean and variance of the signals and the proportion of nulls as we are assuming we know the parameters of the null component.
 
-2. We have implemented simulations as well as the gibbs sampler and ran preliminary tests to explore how well the model is estiamted, how frequently to estimate the model, and strategies for increasing performance where little data has been seen.  
+2. We have implemented simulations as well as the Gibbs sampler and ran preliminary tests to explore how well the model is estimated, how frequently to estimate the model, and strategies for increasing performance where little data has been seen. We also compute BayesFDR each iteration using the estimated mixture model from our sampler.
 
-3. We outline further areas we are currently and plan to explore.
+3. We outline further areas we are currently planning to explore.
 
 ## 1. Gibbs Sampling Scheme 
 
@@ -36,7 +36,7 @@ $\sigma^2_1$ - variance of the signals
 
 We model $X_t$ as a mixture of Gaussians:
 
-$$X_t \mid \pi_0, \mu_1, \sigma_1 \sim \pi_0 N(0,1) + (1 - \pi_0) N(\mu_1, \sigma^2_1)$$
+$$X_t \mid \pi_0, \mu_1, \sigma^2_1 \sim \pi_0 N(0,1) + (1 - \pi_0) N(\mu_1, \sigma^2_1)$$
 $$X_t \mid Z_t = 0 \sim N(0, 1)$$
 $$X_t \mid Z_t = 1, \mu_1, \sigma^2_1 \sim N(\mu_1, \sigma^2_1)$$
 
@@ -44,41 +44,116 @@ We can reparameterize this model in terms of the precision $\phi_1$ of the signa
 
 $$L(\pi_0, \mu_1, \sigma^2_1 \mid X, Z) \propto (\pi_0)^{n_0} exp(-\frac{1}{2} \sum_{t:z_t = 0} x_t^2) \cdot (1 - \pi_0)^{n_1} exp(-\frac{\phi_1}{2} \sum_{t:z_t = 1} (x_t - \mu_1)^2)$$
 
-where $n_0$ and $n_1$ are the number observed of nulls and signals respectivley. We can then set priors on $\pi_0, \mu_1, \phi_1$ that all satisfy conjugacy:
+where $n_0$ and $n_1$ are the number of observed nulls and signals respectively. We can then set priors on $\pi_0, \mu_1, \phi_1$ which satisfy conjugacy:
 
 $$\pi_0 \sim Beta(\alpha, \beta)$$
 $$\phi_1 \sim Gamma(\frac{a}{2}, \frac{b}{2})$$
 $$\mu_1 \mid \phi_1 \sim Normal(\mu^{*}, \frac{1}{\alpha^{*} \phi_1})$$
 
-thus the posterior distributions can be written as:
+thus the posterior distributions of these parameters can be written as:
 
 $$\pi_0 \mid X, Z = 0 \sim Beta(\alpha + n_0, \beta + n_1)$$
 $$\phi_1 \mid X, Z \sim Gamma(\frac{a + n_1}{2}, b + \sum_{t:z_t = 1} (x_t - \mu_1)^2)$$
 $$\mu_1 \mid X, Z, \phi_1 \sim Normal(\frac{\alpha^{*} \mu^{*} + n_1 + \bar{x_1}}{\alpha^{*} + n_1}, \frac{1}{(\alpha^{*} + n_1) \phi_1})$$
 
-We also need to sample from the posterior of $Z$ because it is conditioned on $Z$ for all the parameters we are interested in estimating:
+We also need to sample from the posterior of $Z$ due to the conditional dependencies above:
 
 $$P(Z_t \mid X_t = x_t, \pi_0, \mu_1, \phi_1) = \frac{\pi_0 exp(-\frac{x^2_t}{2})}{\pi_0 exp(-\frac{x^2_t}{2}) + ((1 - \pi_0) \phi_1 exp(-\frac{\phi_1}{2} (x_t - \mu_1)^2))}$$
 
 We have implemented a Gibbs sampler to sample from the posterior distributions of the parameters:
 
 1. Set $\pi^{(0)}_0$, $\mu^{(0)}_1$ and $\phi^{(0)}_1$  
-2. Update $Z$ by sampling from its posterior contioned on $X$ and the current values $\pi_0$, $\mu_1$, and $\phi_1$  
+2. Update $Z$ by sampling from its posterior conditioned on $X$ and the current values $\pi_0$, $\mu_1$, and $\phi_1$  
 3. Update $\pi_0$ by sampling from its posterior conditioned on $X$  
 4. Update $\phi_1$ by sampling from its posterior conditioned on $X$ and the current value of $Z$  
 5. Update  $\mu_1$ by sampling from its posterior conditioned on $X$ and $\phi_1$
 
 ## 2. Simulations
 
-We have implemented a framework such that we stream data from a known simulated mixture model and estimate this model using gibbs sampling. As seen below we can sucessfully estimate this model after we've observed a reasonable amount of data.
+We have implemented a framework such that we stream data from a known simulated mixture model and estimate this model using Gibbs sampling. As seen below we can successfully estimate this model after we've observed a reasonable amount of data.
 
-<!-- TODO : include plots here -->
+### Figure 1
+
+```{r, echo=FALSE}
+source("../../src/simulation/simulate_mixture.R")
+source("../../src/model/mcmc.R")
+
+
+X <- sim.mixture.2comp(1000, 0.90, mu1=2, sigma1=1)
+
+gibbs10 <- gibbs_sampler(X$Z[1:10], 2000)
+gibbs100 <- gibbs_sampler(X$Z[1:100], 2000)
+gibbs500 <- gibbs_sampler(X$Z[1:500], 2000)
+gibbs1000 <- gibbs_sampler(X$Z[1:1000], 2000)
+
+par(mfrow=c(2,2))
+plot(-gibbs10$trace, type='l', main="N=10", ylab="Trace")
+plot(-gibbs100$trace, type='l', main="N=100", ylab="Trace")
+plot(-gibbs500$trace, type='l', main="N=500", ylab="Trace")
+plot(-gibbs1000$trace, type='l', main="N=1000", ylab="Trace")
+```
+
+Trace plot of Gibbs sampler. Trace on the y-axis is the negative log-likelihood of the the latent Z which depends on all the parameters of the mixture model. We see that the sampler does not mix well early in the data-stream i.e. with little data.
+
+### Figure 2
+
+```{r, echo=FALSE}
+# Confidence Interval Function (Normally Distributed)
+confidence <- function(x, a=0.05){
+  xbar <- mean(x)
+  s <- sqrt(var(x))
+  n <- length(x)
+  err <- (qnorm(1-(a/2))*s)/sqrt(n)
+  return(c(xbar-err, xbar+err, xbar, s, err))
+}
+
+lower.mu1 <- c()
+upper.mu1 <- c()
+mean.mu1 <- c()
+mean.sigma2 <- c()
+upper.sigma2 <- c()
+
+mean.pi0 <- c()
+upper.pi0 <- c()
+
+for (i in seq(from=1, to=1000, by=100)){
+  cur.gibbs <- gibbs_sampler(X$Z[1:i], n_iter=2000)
+  mu.conf <- confidence(cur.gibbs$mu1_samples)
+  pi0.conf <- confidence(cur.gibbs$pi0_samples)
+  sigma2.conf <- confidence(1/cur.gibbs$phi1_samples)
+  lower.mu1 <- c(lower.mu1, mu.conf[1])
+  upper.mu1 <- c(upper.mu1, mu.conf[2])
+  mean.mu1 <- c(mean.mu1, mu.conf[3])
+  upper.pi0 <- c(upper.pi0, pi0.conf[2])
+  mean.pi0 <- c(mean.pi0, pi0.conf[3])
+  upper.sigma2 <- c(upper.sigma2, sigma2.conf[2])
+  mean.sigma2 <- c(mean.sigma2, sigma2.conf[3])
+}
+
+upper.sigma2[upper.sigma2 > 10] <- 10
+
+df2 <- data.frame(x=seq(length(mean.mu1)),
+                    fit=mean.mu1,lwr=lower.mu1,upr=upper.mu1)
+```
+
+```{r, echo=FALSE}
+source("../../src/analysis/fdr_methods.R")
+# Setting the significance threshold
+alpha <- 0.1
+
+z_hat_bayes <- get_roots(BayesFDR, alpha, mean.mu1, mean.pi0, mean.sigma2)
+z_hat_bayes.max <- get_roots(BayesFDR, alpha, upper.mu1, upper.pi0, upper.sigma2)
+
+plot(z_hat_bayes, xlab="t (x 100)", ylab="Z-Bayes (using mean)", type='l')
+```
+
+Plot of BayesianFDR Z-score critical value over time. We see strange results in the beginning of the data-stream due to poor estimation of the the mixture model. As time proceeds reasonable critical values are computed. 
 
 ## 3. Future Plans / Exploration 
 
-* Compute BayesFDR using the estimated mixture model and explore what summary of the posterior distribution is most appropriate and conservative to use for the time-wise BayesFDR i.e. posterior mean, upper credible interval.
-* Explore how well this approach controls FDR.
-* Come up with stratgies in the beginning of the data stream to be more conservative and have less confidence in our estimated model.
+* Explore what summary of the posterior distribution is most appropriate and conservative to use for the time-wise BayesFDR i.e. posterior mean, upper credible interval.
+* Explore how well this approach controls FDR and retains power.
+* Come up with strategies in the beginning of the data stream to be more conservative and have less confidence in our estimated model.
 * Explore how often we should estimate the model (interval of sampling)
 * Explore the effect of temporal correlation in the signals and its effects on parameter estimation and FDR.
 * Implement the Gibbs sampler in C++ for efficiency 
