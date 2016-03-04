@@ -33,7 +33,7 @@ plot(-gibbs500$trace, type='l', main="N=500", ylab="Trace")
 plot(-gibbs1000$trace, type='l', main="N=1000", ylab="Trace")
 ```
 
-#2. Confidence Intervals of Parameters
+#2. Sequential Confidence Intervals of $\mu_1$
 
 ```{r, echo=FALSE}
 # Confidence Interval Function (Normally Distributed)
@@ -45,24 +45,34 @@ confidence <- function(x, a=0.05){
   return(c(xbar-err, xbar+err, xbar, s, err))
 }
 
-lower.mu <- c()
-upper.mu <- c()
-mean.mu <- c()
-prop.signals <- c()
+lower.mu1 <- c()
+upper.mu1 <- c()
+mean.mu1 <- c()
+mean.sigma2 <- c()
+upper.sigma2 <- c()
+
+mean.pi0 <- c()
+upper.pi0 <- c()
 
 for (i in seq(from=1, to=1000, by=100)){
-  cur.gibbs <- gibbs_sampler(X$Z[1:i], n_iter=3000)
+  cur.gibbs <- gibbs_sampler(X$Z[1:i], n_iter=2000)
   mu.conf <- confidence(cur.gibbs$mu1_samples)
-  lower.mu <- c(lower.mu, mu.conf[1])
-  upper.mu <- c(upper.mu, mu.conf[2])
-  mean.mu <- c(mean.mu, mu.conf[3])
-  prop.signals <- c(prop.signals, sum(X$true_signals[1:i])/i)
+  pi0.conf <- confidence(cur.gibbs$pi0_samples)
+  sigma2.conf <- confidence(1/cur.gibbs$phi1_samples)
+  lower.mu1 <- c(lower.mu1, mu.conf[1])
+  upper.mu1 <- c(upper.mu1, mu.conf[2])
+  mean.mu1 <- c(mean.mu1, mu.conf[3])
+  upper.pi0 <- c(upper.pi0, pi0.conf[2])
+  mean.pi0 <- c(mean.pi0, pi0.conf[3])
+  upper.sigma2 <- c(upper.sigma2, sigma2.conf[2])
+  mean.sigma2 <- c(mean.sigma2, sigma2.conf[3])
 }
 
-df2 <- data.frame(x=seq(length(mean.mu)),
-                    fit=mean.mu,lwr=lower.mu,upr=upper.mu)
+upper.sigma2[upper.sigma2 > 10] <- 10
 
-par(mfrow=c(1,2))
+df2 <- data.frame(x=seq(length(mean.mu1)),
+                    fit=mean.mu1,lwr=lower.mu1,upr=upper.mu1)
+
 plot(fit~x,
      data=df2,
      ylim=range(c(1,3)),
@@ -74,8 +84,21 @@ matlines(df2[,1],df2[,-1],
         lty=1,
         col=c("black","red","red"))
 
-plot(prop.signals, xlab="t (x 100)", ylab="Prop. Signals at Time", type='l')
 ```
 
-\textbf{Note : } The confidence interval plot is zoomed in to better display convergence to our true parameter of interest ($\mu_1 = 2$). 
 
+#3. Estimates of BayesFDR sequentially over time
+
+```{r, echo=FALSE}
+source("../src/analysis/fdr_methods.R")
+# Setting the significance threshold
+alpha <- 0.1
+
+z_hat_bayes <- get_roots(BayesFDR, alpha, mean.mu1, mean.pi0, mean.sigma2)
+z_hat_bayes.max <- get_roots(BayesFDR, alpha, upper.mu1, upper.pi0, upper.sigma2)
+
+plot(z_hat_bayes, xlab="t (x 100)", ylab="Z-Bayes (using mean)", type='l')
+
+plot(z_hat_bayes.max, xlab="t (x 100)", ylab="Z-Bayes (using upper 95th quantile)", type='l')
+
+```
