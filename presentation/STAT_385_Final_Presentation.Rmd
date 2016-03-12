@@ -9,27 +9,54 @@ output: ioslides_presentation
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-## R Markdown
+## Online Hypothesis Testing
 
-This is an R Markdown presentation. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+TODO : describe valid scenarios when we would want to use online testing.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document.
 
-## Slide with Bullets
+## Previous Methods to Control Online FDR
 
-- Bullet 1
-- Bullet 2
-- Bullet 3
+- LBOND / LBORD
+- $\alpha$-investing
 
-## Slide with R Output
+## A Bayesian Approach to FDR
 
-```{r cars, echo = TRUE}
-summary(cars)
-```
 
-## Slide with Plot
+## Modeling Assumptions
 
-```{r pressure}
-plot(pressure)
-```
+We will largely be working in "Z-score" space, where:
+
+  $$Z \sim \pi\cdot N(0,1) + (1-\pi) \cdot N(\mu_1 ,\sigma^2_1)$$
+
+## Gibbs Sampler  
+
+- We want to estimate $\theta = \{\pi, \mu_1, \sigma^2_1\}$
+
+- We can use a Gibbs Sampler and some conjugate priors to accomplish this!
+
+
+## Simulation Scenario
+
+- We simulate 10000 time points , and a Z-score from each time point given $\theta = \{\pi = 0.9, \mu_1 = 2, \sigma^2_1 = 1\}$
+
+- In order to compare against previous methods such as LBOND/LBORD
+
+
+## False-Positive Rates
+
+
+## Power
+
+
+## Caveats to Inference 
+
+- Really difficult to estimate model parameters with small amount of data
+- Iterative Gibbs Sampling can be quite intensive
+
+## Further Directions
+
+- 
+
+## Acknowledgements
+
 

@@ -36,7 +36,7 @@ StoreyFDR <- function(z, mu, alpha=0.2, pi0=0.8, sigma2=4){
 get_roots <- function(f, alpha, mus, pi0s, sigma2s){
   roots <- rep(NA, length(mus))
   for (i in 1:length(mus)){
-    roots[i] <- uniroot(f, interval=c(0,8), extendInt = "yes", alpha=alpha, mu=mus[i], pi0=pi0s[i], sigma2=sigma2s[i])$root 
+    roots[i] <- uniroot(f, interval=c(0,10), extendInt = "yes", alpha=alpha, mu=mus[i], pi0=pi0s[i], sigma2=sigma2s[i])$root 
   }
   return(roots)
 }

@@ -10,7 +10,7 @@
 #   mu1 - mean of signals
 #   sd1 - var of signals
 #-----------------------------------
-sim.mixture.2comp <- function(n, pi0, mu0=0, sigma0=1, mu1, sigma1){
+sim.mixture.2comp <- function(n, pi0,  mu1, sigma1 ,mu0=0, sigma0=1){
 	signals <- rbinom(n, 1, (1-pi0))
 	z <- vapply(signals,
 	            FUN = function(x){ifelse(x,rnorm(1,mu1,sigma1), rnorm(1,mu0,sigma0))}, 
