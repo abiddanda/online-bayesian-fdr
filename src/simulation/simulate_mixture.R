@@ -20,7 +20,6 @@ sim.mixture.2comp <- function(n, pi0,  mu1, sigma1 ,mu0=0, sigma0=1){
 	return(mixture.output)
 }
 
-
 #-----------------------------------
 # Description : 
 #   Simulates data from a two 

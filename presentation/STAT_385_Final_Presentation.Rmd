@@ -52,26 +52,33 @@ TODO : references
 
 A Bayesian approach to FDR control considers an underlying mixture distribution consisting of "null" and "signal" components, and controls the FDR based on the parameters of this distribution. 
 
+```{r, fig.align='center', fig.height=3, echo=FALSE, warning=FALSE, message=FALSE}
+library(ggplot2)
+Mixture.List.Sim1 <- readRDS("../data/sim1.rds")
+X <- Mixture.List.Sim1$Z
+Z <- Mixture.List.Sim1$true_signals
+df <- data.frame(Z=factor(Z), X=X)
 
+ggplot(df, aes(X,fill=Z)) + geom_density(alpha=0.4)
 
-TODO : figure of mixture histogram ...
+```
 
 ## Model Assumptions
 
-- $X_t$ - the test statistic at the $t^{th}$ time point
+- $X$ - a test statistic 
 - $\pi_0$ - proportion of nulls
 - $\mu_1$ - mean of the signals
 - $\sigma^2_1$ - variance of the signals
 
-We model $X_t$ as a mixture of Gaussians:
+We model $X$ as a mixture of Gaussians:
 
-$$X_t \mid \pi_0, \mu_1, \sigma^2_1 \sim \pi_0 N(0,1) + (1 - \pi_0) N(\mu_1, \sigma^2_1)$$
+$$X \mid \pi_0, \mu_1, \sigma^2_1 \sim \pi_0 N(0,1) + (1 - \pi_0) N(\mu_1, \sigma^2_1)$$
 
 ## Controlling Bayesian FDR
 
 $$\alpha = \frac{\pi_0(1 - \Phi(\hat{x}))}{\pi_0(1 - \Phi(\hat{x})) + (1-\pi_0)\left(1 - \Phi\left(\frac{\hat{x} -\mu_1}{\sigma_1}\right)\right)}$$
 
-Where we reject $X_t$ if $X_t > \hat{x}$. 
+Where we reject $X$ if $X > \hat{x}$. 
 
 Here we assume that we only know the parameters of the null component, but we have to estimate $\pi_0, \mu_1, \sigma_1$. 
 
@@ -81,34 +88,68 @@ Here we assume that we only know the parameters of the null component, but we ha
   <img src="img/thinking.jpg" width="200" height="150" />
 </center>
 
-## Gibbs Sampler  
+## Gibbs Sampler Formulation  
+Let $Z$ be a latent indicator for being a signal ($Z=1$).
 
-- We want to estimate $\theta = \{\pi, \mu_1, \sigma^2_1\}$
+Priors:
 
-- We can use a Gibbs Sampler to accomplish this!
+- $\pi_0 \sim Beta(\alpha, \beta)$      
+- $\phi_1 \sim Gamma(\frac{a}{2}, \frac{b}{2})$   
+- $\mu_1 \mid \phi_1 \sim Normal(\mu^{*}, \frac{1}{\alpha^{*} \phi_1})$
+
+Posteriors: 
+
+- $\pi_0 \mid X, Z = 0 \sim Beta(\alpha + n_0, \beta + n_1)$ 
+- $\phi_1 \mid X, Z \sim Gamma(\frac{a + n_1}{2}, b + \sum_{t:z_t = 1} (x_t - \mu_1)^2)$
+- $\mu_1 \mid X, Z, \phi_1 \sim Normal(\frac{\alpha^{*} \mu^{*} + n_1 + \bar{x_1}}{\alpha^{*} + n_1}, \frac{1}{(\alpha^{*} + n_1) \phi_1})$
+
+
+<!-- $$P(Z_t \mid X_t = x_t, \pi_0, \mu_1, \phi_1) = \frac{\pi_0 exp(-\frac{x^2_t}{2})}{\pi_0 exp(-\frac{x^2_t}{2}) + ((1 - \pi_0) \phi_1 exp(-\frac{\phi_1}{2} (x_t - \mu_1)^2))}$$ -->
+
+## Online Bayesian FDR
+
+Here we propose to:
+
+- Estimate the parameters of the mixture model at a given time interval using the Gibbs sampler described above
+- Use the estimated mixture model to control the Bayesian-FDR
+
+While we make "hard call" descisions about wheather a test statistic is a null or signal at time $t$, part of the novelty of our approach is that when we estimate the model we sample from the posterior distribution of these "calls", allowing for flexibility in the future.
+
+TODO: create figure here
 
 ## Simulation Scenario
 
 - We simulate 10000 time points , and a Z-score from each time point given $\theta = \{\pi = 0.9, \mu_1 = 2, \sigma^2_1 = 1\}$
 
-- In order to compare against previous methods such as LBOND/LBORD
+```{r, fig.height=3, echo=FALSE, warning=FALSE, message=FALSE}
+library(ggplot2)
+Mixture.List.Sim1 <- readRDS("../data/sim1.rds")
+X <- Mixture.List.Sim1$Z
 
-
-## False-Positive Rates
-
-
-## Power
-
+qplot(seq_along(X),X, xlab="t",ylab="X_t")
+```
 
 ## Caveats to Inference 
 
 - Really difficult to estimate model parameters with small amount of data
 - Iterative Gibbs Sampling can be quite intensive
 
+## False-Positive Rates (Empirical)
+
+
+## Power (Empirical)
+
+
+
 ## Further Directions
 
-- 
+- More efficient inference procedure than MCMC
+- Explore consequences of how frequently we re-estimate the model
+- Correlation amongst the signals (i.e. simulate from a Markov Chain)
+- Explore different modeling assumptions for signal and null distributions (i.e. multiple components in the mixture model)
 
 ## Acknowledgements
 
+- Rina Barber
+- Yuancheng Zhu
 

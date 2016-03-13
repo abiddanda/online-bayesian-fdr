@@ -26,7 +26,7 @@ alpha_inv = function(P,alpha){
 	output = list()
 	output$discoveries = discoveries
 	output$alphas = alphas
-	output
+	return(output)
 }
 
 LBOND = function(P,alpha){
@@ -86,5 +86,50 @@ LBORD = function(P,alpha){
 	output$alphas = alphas
 	output	
 }
+
+run_methods = function(Pvals, alpha){
+  alpha_inv_result = alpha_inv(Pvals,alpha)
+  LBOND_result = LBOND(Pvals,alpha)
+  LBORD_result = LBORD(Pvals,alpha)
+  # plot(Pvals,pch=20,xlim = c(0,n*1.1))
+  # points(alpha_inv_result$alphas,col='red',type='l')
+  # points(LBOND_result$alphas,col='blue',type='l')
+  # points(LBORD_result$alphas,col='black',type='l')
+  # legend('topright',legend=c('alpha_inv','LBOND','LBORD'),fill=c('red','blue','black'))
+  return(list(alpha_inv=alpha_inv_result, LBOND_result=LBOND_result, LBORD_result=LBORD_result))
+}
+
+
+# Testing these methods...
+n = 10000
+pi0 = 0.9 # proportion of nulls
+mu = 2 # signal strength
+alpha = 0.2
+
+# setup 1: signals are evenly spaced
+prob_signal = rep(1-pi0,n)
+signals = which(rbinom(n,1,prob_signal)==1)
+Pvals = rep(0,n)
+Pvals[signals] = 2*(1-pnorm(abs(mu + rnorm(length(signals)))))
+Pvals[-signals] = runif(n-length(signals))
+t <- run_methods(Pvals, alpha)
+
+# setup 2: signals are clustered at the beginning of the list
+prob_signal = c(rep(1,n*(1-pi0)),rep(0,n*pi0))
+signals = which(rbinom(n,1,prob_signal)==1)
+Pvals = rep(0,n)
+Pvals[signals] = 2*(1-pnorm(abs(mu + rnorm(length(signals)))))
+Pvals[-signals] = runif(n-length(signals))
+run_methods(Pvals, alpha)
+
+# setup 3: signals appear in clusters throughout the list
+n1 = 50
+prob_signal = rep(c(rep(1,n1*(1-pi0)),rep(0,n1*pi0)),n/n1)
+signals = which(rbinom(n,1,prob_signal)==1)
+Pvals = rep(0,n)
+Pvals[signals] = 2*(1-pnorm(abs(mu + rnorm(length(signals)))))
+Pvals[-signals] = runif(n-length(signals))
+run_methods(Pvals, alpha)
+
 
 

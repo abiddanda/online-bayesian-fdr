@@ -36,6 +36,7 @@ gibbs_sampler <- function(X, n_iter, n_burnin=50, sampling_interval=10){
     # update pi0
     pi0 <- rbeta(1, alpha + sum(z == 0), beta + sum(z == 1))
     
+    # print(sum((X[z==1] - mu1)^2))
     # update phi1
     phi1 <- rgamma(1, (a + sum(z == 1)) / 2, (b + sum((X[z==1] - mu1)^2)) / 2)
     
