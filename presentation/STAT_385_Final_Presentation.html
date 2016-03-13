@@ -10,7 +10,7 @@
 
 
 
-  <meta name="date" content="2016-03-11" />
+  <meta name="date" content="2016-03-15" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -75,6 +75,7 @@
 
   </style>
 
+  <link href="data:text/css;charset=utf-8,%2Ebody%20%7B%0Afont%2Dfamily%3A%20Helvetica%2C%20sans%2Dserif%3B%0A%7D" rel="stylesheet" type="text/css" />
 
 
 </head>
@@ -89,34 +90,93 @@
       <h1 data-config-title><!-- populated from slide_config.json --></h1>
       <h2 data-config-subtitle><!-- populated from slide_config.json --></h2>
       <p data-config-presenter><!-- populated from slide_config.json --></p>
-            <p style="margin-top: 6px; margin-left: -2px;">March 11, 2016</p>
+            <p style="margin-top: 6px; margin-left: -2px;">March 15, 2016</p>
           </hgroup>
   </slide>
 
 <slide class=''><hgroup><h2>Online Hypothesis Testing</h2></hgroup><article  id="online-hypothesis-testing">
 
-<p>TODO : describe valid scenarios when we would want to use online testing.</p>
-
-</article></slide><slide class=''><hgroup><h2>Previous Methods to Control Online FDR</h2></hgroup><article  id="previous-methods-to-control-online-fdr">
+<p>Imagine that new data is presented to us sequentially over time. There are many scenarios where this might apply, such as:</p>
 
 <ul>
-<li>LBOND / LBORD</li>
+<li>trading stocks</li>
+<li>A/B testing for internet advertisements</li>
+<li>sequential genetic studies</li>
+</ul>
+
+<p>TODO : add example figure here to introduce the problem.</p>
+
+</article></slide><slide class=''><hgroup><h2>Challenges in Online FDR Control</h2></hgroup><article  id="challenges-in-online-fdr-control">
+
+<ul>
+<li>Making a decision at each time-point (and can&#39;t take them back)</li>
+<li>Difficult to estimate models early on in the data stream</li>
+<li>Controlling Power and FDR simulataneously through a dynamic time-series is difficult</li>
+</ul>
+
+</article></slide><slide class=''><hgroup><h2>Previous Methods for Online Testing</h2></hgroup><article  id="previous-methods-for-online-testing">
+
+<p>Previous methods for controlling the FDR in online settings are not model based They use heuristics that can readily make decisions at each time point. Some of these methods include:</p>
+
+<ul>
+<li>Level Based on Number of Discoveries (LBOND)</li>
+<li>Level Based on <em>Recent</em> Discoveries (LBORD)</li>
 <li>\(\alpha\)-investing</li>
+</ul>
+
+<p>TODO : references</p>
+
+</article></slide><slide class=''><hgroup><h2>Previous Methods (\(\alpha\)-investing)</h2></hgroup><article  id="previous-methods-alpha-investing">
+
+</article></slide><slide class=''><hgroup><h2>Previous Methods (LBOND/LBORD)</h2></hgroup><article  id="previous-methods-lbondlbord">
+
+<ul>
+<li>at time \(t\), set \(\alpha_t = \beta_t \cdot max\{1, X_{i &lt; t}\}\)</li>
+<li>\(\sum^\infty_{t=1} \beta_t = \alpha\)</li>
+<li>Reject if \(P_t \leq \alpha_t\)</li>
+<li>LBORD follows the same general idea, but we keep track of when the last discovery was made</li>
 </ul>
 
 </article></slide><slide class=''><hgroup><h2>A Bayesian Approach to FDR</h2></hgroup><article  id="a-bayesian-approach-to-fdr">
 
-</article></slide><slide class=''><hgroup><h2>Modeling Assumptions</h2></hgroup><article  id="modeling-assumptions">
+<p>A Bayesian approach to FDR control considers an underlying mixture distribution consisting of &quot;null&quot; and &quot;signal&quot; components, and controls the FDR based on the parameters of this distribution.</p>
 
-<p>We will largely be working in &quot;Z-score&quot; space, where:</p>
+<p>TODO : figure of mixture histogram &#8230;</p>
 
-<p>\[Z \sim \pi\cdot N(0,1) + (1-\pi) \cdot N(\mu_1 ,\sigma^2_1)\]</p>
+</article></slide><slide class=''><hgroup><h2>Model Assumptions</h2></hgroup><article  id="model-assumptions">
+
+<ul>
+<li>\(X_t\) - the test statistic at the \(t^{th}\) time point</li>
+<li>\(\pi_0\) - proportion of nulls</li>
+<li>\(\mu_1\) - mean of the signals</li>
+<li>\(\sigma^2_1\) - variance of the signals</li>
+</ul>
+
+<p>We model \(X_t\) as a mixture of Gaussians:</p>
+
+<p>\[X_t \mid \pi_0, \mu_1, \sigma^2_1 \sim \pi_0 N(0,1) + (1 - \pi_0) N(\mu_1, \sigma^2_1)\]</p>
+
+</article></slide><slide class=''><hgroup><h2>Controlling Bayesian FDR</h2></hgroup><article  id="controlling-bayesian-fdr">
+
+<p>\[\alpha = \frac{\pi_0(1 - \Phi(\hat{x}))}{\pi_0(1 - \Phi(\hat{x})) + (1-\pi_0)\left(1 - \Phi\left(\frac{\hat{x} -\mu_1}{\sigma_1}\right)\right)}\]</p>
+
+<p>Where we reject \(X_t\) if \(X_t &gt; \hat{x}\).</p>
+
+<p>Here we assume that we only know the parameters of the null component, but we have to estimate \(\pi_0, \mu_1, \sigma_1\).</p>
+
+<p><em>How should we do the parameter estimation?</em></p>
+
+<center>
+
+<img src="data:image/jpeg;base64,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" width="200" height="150" />
+
+</center>
 
 </article></slide><slide class=''><hgroup><h2>Gibbs Sampler</h2></hgroup><article  id="gibbs-sampler">
 
 <ul>
 <li><p>We want to estimate \(\theta = \{\pi, \mu_1, \sigma^2_1\}\)</p></li>
-<li><p>We can use a Gibbs Sampler and some conjugate priors to accomplish this!</p></li>
+<li><p>We can use a Gibbs Sampler to accomplish this!</p></li>
 </ul>
 
 </article></slide><slide class=''><hgroup><h2>Simulation Scenario</h2></hgroup><article  id="simulation-scenario">

@@ -1,8 +1,10 @@
 ---
 title: "Online Bayesian FDR Control"
 author: "Arjun Biddanda and Joseph Marcus"
-date: "March 11, 2016"
-output: ioslides_presentation
+date: "March 15, 2016"
+output: 
+  ioslides_presentation:
+    css: css/styles.css
 ---
 
 ```{r setup, include=FALSE}
@@ -11,29 +13,79 @@ knitr::opts_chunk$set(echo = FALSE)
 
 ## Online Hypothesis Testing
 
-TODO : describe valid scenarios when we would want to use online testing.
+Imagine that new data is presented to us sequentially over time. There are many scenarios where this might apply, such as: 
+
+- trading stocks
+- A/B testing for internet advertisements
+- sequential genetic studies
+
+TODO : add example figure here to introduce the problem. 
+
+## Challenges in Online FDR Control
+
+- Making a decision at each time-point (and can't take them back)
+- Difficult to estimate models early on in the data stream
+- Controlling Power and FDR simulataneously through a dynamic time-series is difficult
+
+## Previous Methods for Online Testing
+
+Previous methods for controlling the FDR in online settings are not model based
+They use heuristics that can readily make decisions at each time point. Some of these methods include:
+
+- Level Based on Number of Discoveries (LBOND)
+- Level Based on *Recent* Discoveries (LBORD)
+- $\alpha$-investing 
+
+TODO : references
+
+## Previous Methods ($\alpha$-investing)
 
 
-## Previous Methods to Control Online FDR
+## Previous Methods (LBOND/LBORD)
+- at time $t$,  set $\alpha_t = \beta_t \cdot max\{1, X_{i < t}\}$
+- $\sum^\infty_{t=1} \beta_t = \alpha$
+- Reject if $P_t \leq \alpha_t$
+- LBORD follows the same general idea, but we keep track of when the last discovery was made
 
-- LBOND / LBORD
-- $\alpha$-investing
 
 ## A Bayesian Approach to FDR
 
+A Bayesian approach to FDR control considers an underlying mixture distribution consisting of "null" and "signal" components, and controls the FDR based on the parameters of this distribution. 
 
-## Modeling Assumptions
 
-We will largely be working in "Z-score" space, where:
 
-  $$Z \sim \pi\cdot N(0,1) + (1-\pi) \cdot N(\mu_1 ,\sigma^2_1)$$
+TODO : figure of mixture histogram ...
+
+## Model Assumptions
+
+- $X_t$ - the test statistic at the $t^{th}$ time point
+- $\pi_0$ - proportion of nulls
+- $\mu_1$ - mean of the signals
+- $\sigma^2_1$ - variance of the signals
+
+We model $X_t$ as a mixture of Gaussians:
+
+$$X_t \mid \pi_0, \mu_1, \sigma^2_1 \sim \pi_0 N(0,1) + (1 - \pi_0) N(\mu_1, \sigma^2_1)$$
+
+## Controlling Bayesian FDR
+
+$$\alpha = \frac{\pi_0(1 - \Phi(\hat{x}))}{\pi_0(1 - \Phi(\hat{x})) + (1-\pi_0)\left(1 - \Phi\left(\frac{\hat{x} -\mu_1}{\sigma_1}\right)\right)}$$
+
+Where we reject $X_t$ if $X_t > \hat{x}$. 
+
+Here we assume that we only know the parameters of the null component, but we have to estimate $\pi_0, \mu_1, \sigma_1$. 
+
+*How should we do the parameter estimation?* 
+
+<center>
+  <img src="img/thinking.jpg" width="200" height="150" />
+</center>
 
 ## Gibbs Sampler  
 
 - We want to estimate $\theta = \{\pi, \mu_1, \sigma^2_1\}$
 
-- We can use a Gibbs Sampler and some conjugate priors to accomplish this!
-
+- We can use a Gibbs Sampler to accomplish this!
 
 ## Simulation Scenario
 
