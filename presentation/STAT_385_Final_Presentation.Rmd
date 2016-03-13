@@ -3,9 +3,16 @@ title: "Online Bayesian FDR Control"
 author: "Arjun Biddanda and Joseph Marcus"
 date: "March 15, 2016"
 output: 
-  ioslides_presentation:
+  revealjs::revealjs_presentation:
+    theme: simple
+    center: true
+    transition: slide
+    slideNumber: true
     css: css/styles.css
+    self_contained: true
+    # lib_dir: libs
 ---
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
@@ -59,9 +66,11 @@ X <- Mixture.List.Sim1$Z
 Z <- Mixture.List.Sim1$true_signals
 df <- data.frame(Z=factor(Z), X=X)
 
-ggplot(df, aes(X,fill=Z)) + geom_density(alpha=0.4)
-
+p <- ggplot(df, aes(X,fill=Z)) + geom_density(alpha=0.4) + ggsave("img/mixture_density.png")
 ```
+
+<img src="img/mixture_density.png" style="background:none; border:none; box-shadow:none;">
+
 
 ## Model Assumptions
 
@@ -85,7 +94,7 @@ Here we assume that we only know the parameters of the null component, but we ha
 *How should we do the parameter estimation?* 
 
 <center>
-  <img src="img/thinking.jpg" width="200" height="150" />
+<img src="img/thinking.jpg" width="200" height="150" style="background:none; border:none; box-shadow:none;">
 </center>
 
 ## Gibbs Sampler Formulation  
@@ -93,16 +102,15 @@ Let $Z$ be a latent indicator for being a signal ($Z=1$).
 
 Priors:
 
-- $\pi_0 \sim Beta(\alpha, \beta)$      
-- $\phi_1 \sim Gamma(\frac{a}{2}, \frac{b}{2})$   
-- $\mu_1 \mid \phi_1 \sim Normal(\mu^{*}, \frac{1}{\alpha^{*} \phi_1})$
+$\pi_0 \sim Beta(\alpha, \beta)$  
+$\phi_1 \sim Gamma(\frac{a}{2}, \frac{b}{2})$  
+$\mu_1 \mid \phi_1 \sim Normal(\mu^{*}, \frac{1}{\alpha^{*} \phi_1})$  
 
 Posteriors: 
 
-- $\pi_0 \mid X, Z = 0 \sim Beta(\alpha + n_0, \beta + n_1)$ 
-- $\phi_1 \mid X, Z \sim Gamma(\frac{a + n_1}{2}, b + \sum_{t:z_t = 1} (x_t - \mu_1)^2)$
-- $\mu_1 \mid X, Z, \phi_1 \sim Normal(\frac{\alpha^{*} \mu^{*} + n_1 + \bar{x_1}}{\alpha^{*} + n_1}, \frac{1}{(\alpha^{*} + n_1) \phi_1})$
-
+$\pi_0 \mid X, Z = 0 \sim Beta(\alpha + n_0, \beta + n_1)$  
+$\phi_1 \mid X, Z \sim Gamma(\frac{a + n_1}{2}, b + \sum_{t:z_t = 1} (x_t - \mu_1)^2)$  
+$\mu_1 \mid X, Z, \phi_1 \sim Normal(\frac{\alpha^{*} \mu^{*} + n_1 + \bar{x_1}}{\alpha^{*} + n_1}, \frac{1}{(\alpha^{*} + n_1) \phi_1})$  
 
 <!-- $$P(Z_t \mid X_t = x_t, \pi_0, \mu_1, \phi_1) = \frac{\pi_0 exp(-\frac{x^2_t}{2})}{\pi_0 exp(-\frac{x^2_t}{2}) + ((1 - \pi_0) \phi_1 exp(-\frac{\phi_1}{2} (x_t - \mu_1)^2))}$$ -->
 
@@ -126,8 +134,10 @@ library(ggplot2)
 Mixture.List.Sim1 <- readRDS("../data/sim1.rds")
 X <- Mixture.List.Sim1$Z
 
-qplot(seq_along(X),X, xlab="t",ylab="X_t")
+p <- qplot(seq_along(X),X, xlab="t",ylab="X_t") + ggsave("img/simulation_points.png")
 ```
+
+<img src="img/simulation_points.png" style="background:none; border:none; box-shadow:none;">
 
 ## Caveats to Inference 
 
@@ -138,7 +148,6 @@ qplot(seq_along(X),X, xlab="t",ylab="X_t")
 
 
 ## Power (Empirical)
-
 
 
 ## Further Directions
@@ -152,4 +161,3 @@ qplot(seq_along(X),X, xlab="t",ylab="X_t")
 
 - Rina Barber
 - Yuancheng Zhu
-
