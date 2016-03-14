@@ -32,7 +32,7 @@ Imagine that new data is presented to us sequentially over time. There are many 
 
 <aside class="notes">
 <small>
-So in the online testing context we imagine that data is revealed to us sequentially through time. In this seeting we test hypothesis each each time point and control FDR at a given level without obersving all the data we could potentially see. Online testing is common in a wide range of scenarios including high frequency stock trading, A/B testing, and new genetic / clincal that include streaming data. 
+So in the online testing context we imagine that data is revealed to us sequentially through time. In this setting we test hypothesis at each time point and control FDR at a given level without obersving all the data we could potentially see. Online testing is common in a wide range of scenarios including high frequency stock trading, A/B testing, and genetic / clincal applications that include streaming data. 
 </small>
 </aside>
 
@@ -57,7 +57,7 @@ Previous methods for controlling FDR in online settings use heuristics that read
 
 <aside class="notes">
 <small>
-So lets quickly review a couple of methods we discussed in class designed for online hypothesis testing. Generally these methods use heuristics thta increase or decrease the level at which we reject a test depending on the number of previous discoveries made. Some of these approaches include alpha-investing by Foster and Stine and LBOND and LBORD from Javanmard and Montanari.
+So lets quickly review a couple of methods that we also discussed in class designed for online hypothesis testing. Generally these methods use heuristics that increase or decrease the level at which we reject a test depending on the number of previous discoveries made. Some of these approaches include alpha-investing by Foster and Stine and LBOND and LBORD from Javanmard and Montanari.
 </small>
 </aside>
 
@@ -82,12 +82,11 @@ $$
 
 <aside class="notes">
 <small>
-In alpha-investing we define a wealth function w. When we reject the null the wealth function grows and when we fail to reject the null the wealth function decays. Specifically at time 0 we set the wealth function to the global level alpha. For step 2 we then proceed to set a time specific alpha sub t. We then reject or fail to reject the P value from time t and redefine our wealth function depeding on what desicion we make. The general features of alpha-investing are 
+In alpha-investing we define a wealth function w. When we reject the null, the wealth function grows and when we fail to reject the null the wealth function decays. Specifically at time 0 we set the wealth function to a "global level" alpha. For step 2 we then proceed to set a time specific alpha sub t. We then reject or fail to reject the P value from time t and redefine our wealth function depeding on what desicion we made. The general features of alpha-investing are 
 
-* the more discoveries we make the less stringent we are
-* the less discoveries we make the more stingent we are 
-through time. 
-* signals have to be very strong if one has failed to rejct a lot.
+* the more discoveries we make the less stringent we are through time
+* the less discoveries we make the more stingent we are through time. 
+* signals have to be very strong if one has failed to reject a lot.
 </small>
 </aside>
 
@@ -105,7 +104,7 @@ through time.
 
 <aside class="notes">
 <small>
-In Levels Based on Number of Discoveries (LBOND) we define a series of weights beta sub t which all sum up to the global level alpha. We then set a time specific alpha equal to the the weight at time t times the max of 1 and the number of discoveries made up to the last time step D sub t minus 1. We reject a p value if its less that alpha sub t and add to our discovery count. Levels Based on Recent Discoveries follows a similar appraoch but uses weights from time when the last discovery was made.  
+In Levels Based on Number of Discoveries (LBOND) we define a series of weights beta sub t which all sum up to the global level alpha. We then set a time specific alpha equal to the the weight at time t times the max of 1 and the number of discoveries made up to the last time step. We call the discovery count D sub t minus 1. We reject a p value if its less that alpha sub t and add to our discovery count. Levels Based on Recent Discoveries follows a similar appraoch but uses weights from the time when the last discovery was made.  
 </small>
 </aside>
 
@@ -116,9 +115,13 @@ In Levels Based on Number of Discoveries (LBOND) we define a series of weights b
 - Focus on limited features of the data (i.e. only number of discoveries)
 
 <aside class="notes">
-* Some of the challenges in the previously outlined online testing appraoches include that strict desicions rules have to be made at each time point and errors in previous desicions propagate forward in time. 
+<small>
+Some of the challenges in the outlined online testing appraoches include 
+
+* that strict desicions rules have to be made at each time point and errors in previous desicions can propagate forward in time. For exampline in alpha-investing time-depedent correlation can reduce power.
 * It is challenging to control both power and fdr when the time series data can be quite dynamic
-* Heuristics don't allow directly modeling uncertanity in the streaming data 
+* Finally heuristics don't allow for directly modeling uncertanity in the streaming data. We could imagine that accounting for some of this uncertainity could be helpful.
+</small>
 </aside>
 
 ## A Bayesian Approach to FDR
@@ -140,7 +143,10 @@ p <- ggplot(df, aes(X,fill=Z)) + geom_density(alpha=0.4) + ggsave("img/mixture_d
 
 <aside class="notes">
 <small>
-As we covered in class we take a Bayesian appraoch to FDR control in a general setting (not necessirly related to online testing). In this approach we model a give test statistic such as a Z score coming from a mixture model with a null and signal component. As seen in the figure where the orange is the null component and the blueish color is the signal distribution.
+As we covered in class we take a Bayesian appraoch to FDR control in a general setting (not necessirly related to online testing). In this approach we model a given test statistic such as a Z score coming from a mixture model with a null and signal component. As we can see in the figure 
+
+* the orange is the null component which is centered at a mean of zero
+* the blueish color is the signal component which is centered at a mean of around three
 </small>
 </aside>
 
@@ -157,7 +163,9 @@ $$X \mid \pi_0, \mu_1, \sigma^2_1 \sim \pi_0 N(0,1) + (1 - \pi_0) N(\mu_1, \sigm
 
 <aside class="notes">
 <small>
-More specifically let X be a test statistic, pi0 be the true proportion of nulls in our data, mu_1 is the mean of the signal component and sigma^2_1 be the variance of the signal component. One common assumption is to model X as a mixture of gaussian with the defined parameters.
+To define notation we use for the rest of the talk:
+
+Let X be a test statistic, pi0 be the true proportion of nulls in our data, mu_1 is the mean of the signal component and sigma^2_1 be the variance of the signal component. One common assumption is to model X as a mixture of gaussians with the defined parameters.
 </small>
 </aside>
 
@@ -177,7 +185,7 @@ Where we reject $X$ if $X > \hat{x}$.
 
 <aside class="notes">
 <small>
-Here we are assuming we know the parameters of the null component and have to estimate pi0, mu1, and sigma2_1. As we saw in our home work we can control for FDR at level alpha by finding x_hat and reject each test statistic if X > x_hat. One key problem we must ponder over (as seen in the pondering emoji) is how to esimate the unknown parameters.
+Here we are assuming we know the parameters of the null component and have to estimate pi0, mu1, and sigma2_1. As we saw in our home work we can control for FDR at level alpha by finding the x_hat the satifies this equation and reject a test statistic if X > x_hat. One key problem we must ponder over (as seen in the pondering emoji) is how to esimate the unknown parameters.
 </small>
 </aside>
 
