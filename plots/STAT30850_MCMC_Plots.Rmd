@@ -11,94 +11,70 @@ fontsize: 11pt
 output: pdf_document
 ---
 
-
-#1. Gibbs Sampler Convergence Statistics
+#1. Sequential Credible Intervals
 
 ```{r, echo=FALSE}
-source("../src/simulation/simulate_mixture.R")
-source("../src/model/mcmc.R")
+source("~/Repos/online-bayesian-fdr/src/analysis/fpr_power.R")
 
+gibbs500_samples <- readRDS("~/Repos/online-bayesian-fdr/data/sim2_500_08_3_mcmc1.rds")
 
-X <- sim.mixture.2comp(1000, 0.90, mu1=2, sigma1=1)
+gibbs1000_samples <- readRDS("~/Repos/online-bayesian-fdr/data/sim3_1000_08_3_mcmc1.rds")
 
-gibbs10 <- gibbs_sampler(X$Z[1:10], 2000)
-gibbs100 <- gibbs_sampler(X$Z[1:100], 2000)
-gibbs500 <- gibbs_sampler(X$Z[1:500], 2000)
-gibbs1000 <- gibbs_sampler(X$Z[1:1000], 2000)
+mu.credint2 <- cred_intervals(gibbs1000_samples$mu.samples)
 
-par(mfrow=c(2,2))
-plot(-gibbs10$trace, type='l', main="N=10", ylab="Trace")
-plot(-gibbs100$trace, type='l', main="N=100", ylab="Trace")
-plot(-gibbs500$trace, type='l', main="N=500", ylab="Trace")
-plot(-gibbs1000$trace, type='l', main="N=1000", ylab="Trace")
+df3 <- data.frame(fit=mu.credint2[,2], lwr=mu.credint2[,1], upr=mu.credint2[, 3])
+
+plot(df3$fit,
+     ylab="Credible Interval (Mu1)",
+     xlab="t", type='l')
+lines(seq(1:nrow(df3)), df3$lwr, col="red")
+lines(seq(1:nrow(df3)), df3$upr, col="red")
+abline(h=3.0, lty=2)
 ```
 
-#2. Sequential Confidence Intervals of $\mu_1$
+```{r, echo=FALSE}
+pi0.credint <- cred_intervals(gibbs1000_samples$pi0.samples)
+
+df2 <- data.frame(fit=pi0.credint[,2], lwr=pi0.credint[,1], upr=pi0.credint[, 3])
+
+plot(df2$fit,
+     ylab="Credible Interval (pi0)",
+     xlab="t", type='l', ylim=c(0,1))
+lines(seq(1:nrow(df2)), df2$lwr, col="red")
+lines(seq(1:nrow(df2)), df2$upr, col="red")
+abline(h=0.8, lty=2)
+```
 
 ```{r, echo=FALSE}
-# Confidence Interval Function (Normally Distributed)
-confidence <- function(x, a=0.05){
-  xbar <- mean(x)
-  s <- sqrt(var(x))
-  n <- length(x)
-  err <- (qnorm(1-(a/2))*s)/sqrt(n)
-  return(c(xbar-err, xbar+err, xbar, s, err))
-}
+sigma2.credint <- cred_intervals(gibbs1000_samples$sigma2.samples)
 
-lower.mu1 <- c()
-upper.mu1 <- c()
-mean.mu1 <- c()
-mean.sigma2 <- c()
-upper.sigma2 <- c()
+df2 <- data.frame(fit=sigma2.credint[,2], lwr=sigma2.credint[,1], upr=sigma2.credint[, 3])
 
-mean.pi0 <- c()
-upper.pi0 <- c()
-
-for (i in seq(from=1, to=1000, by=100)){
-  cur.gibbs <- gibbs_sampler(X$Z[1:i], n_iter=2000)
-  mu.conf <- confidence(cur.gibbs$mu1_samples)
-  pi0.conf <- confidence(cur.gibbs$pi0_samples)
-  sigma2.conf <- confidence(1/cur.gibbs$phi1_samples)
-  lower.mu1 <- c(lower.mu1, mu.conf[1])
-  upper.mu1 <- c(upper.mu1, mu.conf[2])
-  mean.mu1 <- c(mean.mu1, mu.conf[3])
-  upper.pi0 <- c(upper.pi0, pi0.conf[2])
-  mean.pi0 <- c(mean.pi0, pi0.conf[3])
-  upper.sigma2 <- c(upper.sigma2, sigma2.conf[2])
-  mean.sigma2 <- c(mean.sigma2, sigma2.conf[3])
-}
-
-upper.sigma2[upper.sigma2 > 10] <- 10
-
-df2 <- data.frame(x=seq(length(mean.mu1)),
-                    fit=mean.mu1,lwr=lower.mu1,upr=upper.mu1)
-
-plot(fit~x,
-     data=df2,
-     ylim=range(c(1,3)),
-     ylab="Confint(Mu1)",
-     xlab="t (x 100)")
-with(df2,polygon(c(x,rev(x)),c(lwr,rev(upr)),col = "grey75", border = FALSE))
-matlines(df2[,1],df2[,-1],
-        lwd=c(2,1,1),
-        lty=1,
-        col=c("black","red","red"))
-
+plot(df2$fit,
+     ylab="Credible Interval (sigma2)",
+     xlab="t", type='l', ylim=c(0,2))
+lines(seq(1:nrow(df2)), df2$lwr, col="red")
+lines(seq(1:nrow(df2)), df2$upr, col="red")
+abline(h=1, lty=2)
 ```
 
 
 #3. Estimates of BayesFDR sequentially over time
 
-```{r, echo=FALSE}
-source("../src/analysis/fdr_methods.R")
-# Setting the significance threshold
+```{r, echo=FALSE, eval=FALSE}
+source("~/Repos/online-bayesian-fdr/src/analysis/fdr_methods.R")
 alpha <- 0.1
 
-z_hat_bayes <- get_roots(BayesFDR, alpha, mean.mu1, mean.pi0, mean.sigma2)
-z_hat_bayes.max <- get_roots(BayesFDR, alpha, upper.mu1, upper.pi0, upper.sigma2)
-
-plot(z_hat_bayes, xlab="t (x 100)", ylab="Z-Bayes (using mean)", type='l')
-
-plot(z_hat_bayes.max, xlab="t (x 100)", ylab="Z-Bayes (using upper 95th quantile)", type='l')
-
+z_hat_bayes <- get_roots(BayesFDR, alpha, lower.mu1, seq(.99, 0.89, by=-0.01), mean.sigma2)
+true_zhat_bayes <- get_roots(BayesFDR, alpha, mus = 2, pi0s = 0.9, sigma2s = 1)
+true_zhat_storey <- get_roots(StoreyFDR, alpha, mus = 2, pi0s = 0.9, sigma2s = 1)
+plot(z_hat_bayes, xlab="t (x 100)", ylab="Z-Bayes (using mean)", type='l', col="red", ylim=c(1,5))
+abline(h=true_zhat_bayes, lty=2)
+abline(h=true_zhat_storey, lty=2, col="blue")
 ```
+
+#4. Performance of LBOND/LBORD 
+
+
+
+
