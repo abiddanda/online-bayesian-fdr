@@ -152,7 +152,7 @@ w(t) =
 <ul>
 <li>Making a decision at each time-point (can’t take them back)</li>
 <li>Difficult to estimate models early on in the data stream</li>
-<li>Controlling Power and FDR simulataneously through a dynamic time-series is difficult</li>
+<li>Controlling Power and FDR simultaneously through a dynamic time-series is difficult</li>
 </ul>
 </section>
 <section id="a-bayesian-approach-to-fdr" class="slide level2">
@@ -168,7 +168,7 @@ w(t) =
 <li><span class="math inline">\(\mu_1\)</span> - mean of the signals</li>
 <li><span class="math inline">\(\sigma^2_1\)</span> - variance of the signals</li>
 </ul>
-<p><span class="math inline">\(X\)</span> can be modelled as a mixture of Gaussians:</p>
+<p><span class="math inline">\(X\)</span> can be modeled as a mixture of Gaussians:</p>
 <p><span class="math display">\[X \mid \pi_0, \mu_1, \sigma^2_1 \sim \pi_0 N(0,1) + (1 - \pi_0) N(\mu_1, \sigma^2_1)\]</span></p>
 </section>
 <section id="controlling-bayesian-fdr" class="slide level2">
@@ -201,7 +201,7 @@ w(t) =
 <li>Estimate the parameters of the mixture model at a given time interval using the Gibbs sampler described above</li>
 <li>Use the estimated mixture model to control the FDR</li>
 </ul>
-<p><i> Our approach provides the ability to sample from the posterior of <span class="math inline">\(Z\)</span> when esimtating the mixture model rather than fixing the number of discoveries as in LBOND and LBORD. </i></p>
+<p><i> Our approach provides the ability to sample from the posterior of <span class="math inline">\(Z\)</span> when estimating the mixture model rather than fixing the number of discoveries as in LBOND and LBORD. </i></p>
 </section>
 <section id="simulation-scenario" class="slide level2">
 <h1>Simulation Scenario</h1>
@@ -243,14 +243,14 @@ w(t) =
 <ul>
 <li>More efficient inference procedure than MCMC</li>
 <li>Explore consequences of how frequently we re-estimate the model</li>
-<li>Correlation amongst the signals (i.e. simulate from a Markov Chain)</li>
+<li>Correlation among the signals (i.e. simulate from a Markov Chain)</li>
 <li>Explore different modeling assumptions for signal and null distributions (i.e. multiple components in the mixture model)</li>
 </ul>
 </section>
 <section id="acknowledgements" class="slide level2">
 <h1>Acknowledgements</h1>
 <ul>
-<li>Rina Barber</li>
+<li>Rina Foygel Barber</li>
 <li>Yuancheng Zhu</li>
 </ul>
 <center>
