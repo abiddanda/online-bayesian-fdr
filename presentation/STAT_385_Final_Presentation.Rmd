@@ -8,6 +8,7 @@ output:
     center: true
     transition: slide
     slideNumber: true
+    css: css/style.css
     includes: 
       after_body: html/doc_suffix.html
 
@@ -21,27 +22,21 @@ knitr::opts_chunk$set(echo = FALSE)
 
 Imagine that new data is presented to us sequentially over time. There are many scenarios where this might apply:  
 
-- trading stocks
+- High frequency stock trading
 - A/B testing for internet advertisements
-- sequential genetic studies
+- Sequential genetic / clinical studies
 
 <center>
-<img src="img/general_intro.jpg" width="325" height="325" style="background:none; border:none; box-shadow:none;">
+<img src="img/general_intro.jpg" width="290" height="305" style="background:none; border:none; box-shadow:none;">
 </center>
 
 <aside class="notes">
   Oh hey, these are some notes. They'll be hidden in your presentation, but you can see them if you open the speaker notes window (hit 's' on your keyboard).
 </aside>
 
-## Challenges in Online FDR Control
-
-- Making a decision at each time-point (can't take them back)
-- Difficult to estimate models early on in the data stream
-- Controlling Power and FDR simulataneously through a dynamic time-series is difficult
-
 ## Methods for Online Testing
 
-Previous methods for controlling the FDR in online settings use heuristics that can readily make decisions at each time point. Some of these methods include:
+Previous methods for controlling FDR in online settings use heuristics that readily make decisions at each time point. Some of these methods include:
 
 - Level Based on Number of Discoveries (LBOND)$^{1}$
 - Level Based on *Recent* Discoveries (LBORD)$^{1}$
@@ -51,20 +46,48 @@ Previous methods for controlling the FDR in online settings use heuristics that 
 <img src="img/lbord_figure.png" width="210" height="210" style="background:none; border:none; box-shadow:none;">
 </center>
 
-<i>
-<small>
+<center>
+*<small>
 1) Javanmard and Montanari 2015  
 2) Foster and Stine
-</small>
-</i>
+</small>*
+</center>
 
-## Previous Methods ($\alpha$-investing)
+## Previous Methods 
 
-## Previous Methods (LBOND/LBORD)
-- at time $t$,  set $\alpha_t = \beta_t \cdot max\{1, X_{i < t}\}$
-- $\sum^\infty_{t=1} \beta_t = \alpha$
-- Reject if $P_t \leq \alpha_t$
-- LBORD follows the same general idea, but we keep track of when the last discovery was made
+<center>
+*($\alpha$-investing)*
+</center>
+
+Define a wealth function $w(.)$. Rejections add to wealth and failing to reject takes away wealth:
+
+1. $w(0) = \alpha$  
+2. At time $t$ choose $\alpha_t \leq \frac{w(i-1)}{1 + w(i - 1)}$  
+3. Define $w(t)$ as a function of $w(t-1)$  
+$$
+w(t) = 
+\begin{cases} 
+      w(t-1) + \alpha & P_t \leq \alpha_t \\
+      w(t-1) - \frac{\alpha_t}{1 - \alpha_t} & P_t > \alpha_t
+\end{cases}
+$$
+
+## Previous Methods 
+
+<center>
+*(LBOND/LBORD)*  
+</center> 
+
+1. At time $t$ set $\alpha_t = \beta_t \cdot max\{1, X_{i < t}\}$ where $\sum^\infty_{t=1} \beta_t = \alpha$
+2. Reject if $P_t \leq \alpha_t$
+
+*LBORD follows the same general idea, but we keep track of when the last discovery was made*
+
+## Challenges in Online FDR Control
+
+- Making a decision at each time-point (can't take them back)
+- Difficult to estimate models early on in the data stream
+- Controlling Power and FDR simulataneously through a dynamic time-series is difficult
 
 ## A Bayesian Approach to FDR
 
