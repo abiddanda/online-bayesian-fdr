@@ -91,7 +91,7 @@ $$
 
 ## A Bayesian Approach to FDR
 
-A Bayesian approach to FDR control considers an underlying mixture distribution consisting of "null" and "signal" components, and controls the FDR based on the parameters of this distribution. 
+A Bayesian approach to FDR control considers an underlying mixture distribution consisting of *null* and *signal* components, and controls the FDR based on the parameters of this distribution. 
 
 ```{r, fig.align='center', fig.height=3, echo=FALSE, warning=FALSE, message=FALSE}
 library(ggplot2)
@@ -113,17 +113,17 @@ p <- ggplot(df, aes(X,fill=Z)) + geom_density(alpha=0.4) + ggsave("img/mixture_d
 - $\mu_1$ - mean of the signals
 - $\sigma^2_1$ - variance of the signals
 
-We model $X$ as a mixture of Gaussians:
+$X$ can be modelled as a mixture of Gaussians:
 
 $$X \mid \pi_0, \mu_1, \sigma^2_1 \sim \pi_0 N(0,1) + (1 - \pi_0) N(\mu_1, \sigma^2_1)$$
 
 ## Controlling Bayesian FDR
 
+If we assume that we only know the parameters of the null component, but we have to estimate $\pi_0, \mu_1, \sigma^2_1$ then we can control FDR:
+
 $$\alpha = \frac{\pi_0(1 - \Phi(\hat{x}))}{\pi_0(1 - \Phi(\hat{x})) + (1-\pi_0)\left(1 - \Phi\left(\frac{\hat{x} -\mu_1}{\sigma_1}\right)\right)}$$
 
-Where we reject $X$ if $X > \hat{x}$. 
-
-Here we assume that we only know the parameters of the null component, but we have to estimate $\pi_0, \mu_1, \sigma_1$. 
+*Where we reject $X$ if $X > \hat{x}$.*
 
 *How should we do the parameter estimation?* 
 
@@ -134,17 +134,17 @@ Here we assume that we only know the parameters of the null component, but we ha
 ## Gibbs Sampler  
 Let $Z$ be a latent indicator for being a signal ($Z=1$).
 
-**Priors:**
+*Priors:*
 
 $\pi_0 \sim Beta(\alpha, \beta)$  
-$\phi_1 \sim Gamma(\frac{a}{2}, \frac{b}{2})$  
-$\mu_1 \mid \phi_1 \sim Normal(\mu^{*}, \frac{1}{\alpha^{*} \phi_1})$  
+$\phi_1 \sim Gamma\left(\frac{a}{2}, \frac{b}{2}\right)$  
+$\mu_1 \mid \phi_1 \sim Normal\left(\mu^{*}, \frac{1}{\alpha^{*} \phi_1}\right)$  
 
-**Posteriors:**
+*Posteriors:*
 
 $\pi_0 \mid X, Z = 0 \sim Beta(\alpha + n_0, \beta + n_1)$  
-$\phi_1 \mid X, Z \sim Gamma(\frac{a + n_1}{2}, b + \sum_{t:z_t = 1} (x_t - \mu_1)^2)$  
-$\mu_1 \mid X, Z, \phi_1 \sim Normal(\frac{\alpha^{*} \mu^{*} + n_1 + \bar{x_1}}{\alpha^{*} + n_1}, \frac{1}{(\alpha^{*} + n_1) \phi_1})$  
+$\phi_1 \mid X, Z \sim Gamma\left(\frac{a + n_1}{2}, b + \sum_{t:z_t = 1} (x_t - \mu_1)^2\right)$  
+$\mu_1 \mid X, Z, \phi_1 \sim Normal\left(\frac{\alpha^{*} \mu^{*} + n_1 + \bar{x_1}}{\alpha^{*} + n_1}, \frac{1}{(\alpha^{*} + n_1) \phi_1}\right)$  
 
 <!-- $$P(Z_t \mid X_t = x_t, \pi_0, \mu_1, \phi_1) = \frac{\pi_0 exp(-\frac{x^2_t}{2})}{\pi_0 exp(-\frac{x^2_t}{2}) + ((1 - \pi_0) \phi_1 exp(-\frac{\phi_1}{2} (x_t - \mu_1)^2))}$$ -->
 
@@ -156,7 +156,7 @@ Here we propose to:
 - Use the estimated mixture model to control the FDR
 
 <i>
-Our approach provides the ability to sample from the posterior of previous $Z_{t<T}$ when esimtating the mixture model rather than fixing the number of discoveries as in LBOND and LBORD.
+Our approach provides the ability to sample from the posterior of $Z$ when esimtating the mixture model rather than fixing the number of discoveries as in LBOND and LBORD.
 </i>
 
 ## Simulation Scenario
@@ -175,15 +175,14 @@ p <- qplot(seq_along(X),X, xlab="t",ylab="X_t") + ggsave("img/simulation_points.
 <img src="img/simulation_points.png" style="background:none; border:none; box-shadow:none;">
 </center>
 
+## False-Positive Rates (Empirical)
+
+## Power (Empirical)
 
 ## Caveats to Inference 
 
 - Really difficult to estimate model parameters with small amount of data
 - Iterative Gibbs Sampling can be quite intensive
-
-## False-Positive Rates (Empirical)
-
-## Power (Empirical)
 
 ## Further Directions
 
@@ -193,6 +192,8 @@ p <- qplot(seq_along(X),X, xlab="t",ylab="X_t") + ggsave("img/simulation_points.
 - Explore different modeling assumptions for signal and null distributions (i.e. multiple components in the mixture model)
 
 ## Acknowledgements
+
+Thank you
 
 - Rina Barber
 - Yuancheng Zhu
