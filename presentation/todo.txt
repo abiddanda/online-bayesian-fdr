@@ -1,0 +1,2 @@
+* fill in figures
+* clean up notation

@@ -8,11 +8,7 @@ output:
     center: true
     transition: slide
     slideNumber: true
-    css: css/styles.css
-    self_contained: true
-    # lib_dir: libs
 ---
-
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
@@ -20,33 +16,42 @@ knitr::opts_chunk$set(echo = FALSE)
 
 ## Online Hypothesis Testing
 
-Imagine that new data is presented to us sequentially over time. There are many scenarios where this might apply, such as: 
+Imagine that new data is presented to us sequentially over time. There are many scenarios where this might apply:  
 
 - trading stocks
 - A/B testing for internet advertisements
 - sequential genetic studies
 
-TODO : add example figure here to introduce the problem. 
+<center>
+<img src="img/general_intro.jpg" width="325" height="325" style="background:none; border:none; box-shadow:none;">
+</center>
 
 ## Challenges in Online FDR Control
 
-- Making a decision at each time-point (and can't take them back)
+- Making a decision at each time-point (can't take them back)
 - Difficult to estimate models early on in the data stream
 - Controlling Power and FDR simulataneously through a dynamic time-series is difficult
 
-## Previous Methods for Online Testing
+## Methods for Online Testing
 
-Previous methods for controlling the FDR in online settings are not model based
-They use heuristics that can readily make decisions at each time point. Some of these methods include:
+Previous methods for controlling the FDR in online settings use heuristics that can readily make decisions at each time point. Some of these methods include:
 
-- Level Based on Number of Discoveries (LBOND)
-- Level Based on *Recent* Discoveries (LBORD)
-- $\alpha$-investing 
+- Level Based on Number of Discoveries (LBOND)$^{1}$
+- Level Based on *Recent* Discoveries (LBORD)$^{1}$
+- $\alpha$-investing$^{2}$
 
-TODO : references
+<center>
+<img src="img/lbord_figure.png" width="210" height="210" style="background:none; border:none; box-shadow:none;">
+</center>
+
+<i>
+<small>
+1) Javanmard and Montanari 2015  
+2) Foster and Stine
+</small>
+</i>
 
 ## Previous Methods ($\alpha$-investing)
-
 
 ## Previous Methods (LBOND/LBORD)
 - at time $t$,  set $\alpha_t = \beta_t \cdot max\{1, X_{i < t}\}$
@@ -54,23 +59,22 @@ TODO : references
 - Reject if $P_t \leq \alpha_t$
 - LBORD follows the same general idea, but we keep track of when the last discovery was made
 
-
 ## A Bayesian Approach to FDR
 
 A Bayesian approach to FDR control considers an underlying mixture distribution consisting of "null" and "signal" components, and controls the FDR based on the parameters of this distribution. 
 
 ```{r, fig.align='center', fig.height=3, echo=FALSE, warning=FALSE, message=FALSE}
 library(ggplot2)
+library(dplyr)
 Mixture.List.Sim1 <- readRDS("../data/sim1.rds")
 X <- Mixture.List.Sim1$Z
 Z <- Mixture.List.Sim1$true_signals
-df <- data.frame(Z=factor(Z), X=X)
+df <- data.frame(Z=Z, X=X) %>% mutate(Z = ifelse(Z == 1, "signal", "null"))
 
 p <- ggplot(df, aes(X,fill=Z)) + geom_density(alpha=0.4) + ggsave("img/mixture_density.png")
 ```
 
 <img src="img/mixture_density.png" style="background:none; border:none; box-shadow:none;">
-
 
 ## Model Assumptions
 
@@ -97,16 +101,16 @@ Here we assume that we only know the parameters of the null component, but we ha
 <img src="img/thinking.jpg" width="200" height="150" style="background:none; border:none; box-shadow:none;">
 </center>
 
-## Gibbs Sampler Formulation  
+## Gibbs Sampler  
 Let $Z$ be a latent indicator for being a signal ($Z=1$).
 
-Priors:
+**Priors:**
 
 $\pi_0 \sim Beta(\alpha, \beta)$  
 $\phi_1 \sim Gamma(\frac{a}{2}, \frac{b}{2})$  
 $\mu_1 \mid \phi_1 \sim Normal(\mu^{*}, \frac{1}{\alpha^{*} \phi_1})$  
 
-Posteriors: 
+**Posteriors:**
 
 $\pi_0 \mid X, Z = 0 \sim Beta(\alpha + n_0, \beta + n_1)$  
 $\phi_1 \mid X, Z \sim Gamma(\frac{a + n_1}{2}, b + \sum_{t:z_t = 1} (x_t - \mu_1)^2)$  
@@ -119,15 +123,15 @@ $\mu_1 \mid X, Z, \phi_1 \sim Normal(\frac{\alpha^{*} \mu^{*} + n_1 + \bar{x_1}}
 Here we propose to:
 
 - Estimate the parameters of the mixture model at a given time interval using the Gibbs sampler described above
-- Use the estimated mixture model to control the Bayesian-FDR
+- Use the estimated mixture model to control the FDR
 
-While we make "hard call" descisions about wheather a test statistic is a null or signal at time $t$, part of the novelty of our approach is that when we estimate the model we sample from the posterior distribution of these "calls", allowing for flexibility in the future.
-
-TODO: create figure here
+<i>
+Our approach provides the ability to sample from the posterior of previous $Z_{t<T}$ when esimtating the mixture model rather than fixing the number of discoveries as in LBOND and LBORD.
+</i>
 
 ## Simulation Scenario
 
-- We simulate 10000 time points , and a Z-score from each time point given $\theta = \{\pi = 0.9, \mu_1 = 2, \sigma^2_1 = 1\}$
+- We simulate 500 time points, and a Z-score from each time point given $\theta = \{\pi = 0.9, \mu_1 = 3, \sigma^2_1 = 1\}$
 
 ```{r, fig.height=3, echo=FALSE, warning=FALSE, message=FALSE}
 library(ggplot2)
@@ -137,7 +141,10 @@ X <- Mixture.List.Sim1$Z
 p <- qplot(seq_along(X),X, xlab="t",ylab="X_t") + ggsave("img/simulation_points.png")
 ```
 
+<center>
 <img src="img/simulation_points.png" style="background:none; border:none; box-shadow:none;">
+</center>
+
 
 ## Caveats to Inference 
 
@@ -146,9 +153,7 @@ p <- qplot(seq_along(X),X, xlab="t",ylab="X_t") + ggsave("img/simulation_points.
 
 ## False-Positive Rates (Empirical)
 
-
 ## Power (Empirical)
-
 
 ## Further Directions
 
