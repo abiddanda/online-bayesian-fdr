@@ -161,7 +161,7 @@ Our approach provides the ability to sample from the posterior of $Z$ when esimt
 
 ## Simulation Scenario
 
-- We simulate 500 time points, and a Z-score from each time point given $\theta = \{\pi = 0.9, \mu_1 = 3, \sigma^2_1 = 1\}$
+- We simulate 1000 time points, and a Z-score from each time point given $\theta = \{\pi = 0.8, \mu_1 = 3, \sigma^2_1 = 1\}$
 
 ```{r, fig.height=3, echo=FALSE, warning=FALSE, message=FALSE}
 library(ggplot2)
@@ -172,7 +172,7 @@ p <- qplot(seq_along(X), X, xlab="t",ylab="X_t") + ggsave("img/simulation_points
 ```
 
 <center>
-<img src="img/simulation_points.png" style="background:none; border:none; box-shadow:none;">
+<img src="img/simulation_points.png" height="400" style="background:none; border:none; box-shadow:none;">
 </center>
 
 ## Gibbs Results 
@@ -216,14 +216,23 @@ p4 <- plot_grid(p3, p1, p2, nrow = 3) + ggsave("img/gibbs_results.png")
 <img src="img/gibbs_results.png" width="700" height="600" style="background:none; border:none; box-shadow:none;">
 </center>
 
-## False-Positive Rates (Empirical)
+## Gibbs Results
 
-## Power (Empirical)
+<img src="img/xhat.png" height="600" style="background:none; border:none; box-shadow:none;">
 
-## Caveats to Inference 
+## FDP
+
+<img src="img/fdp_empirical.png" style="background:none; border:none; box-shadow:none;">
+
+## Power
+
+<img src="img/power_empirical.png" style="background:none; border:none; box-shadow:none;">
+
+## Caveats
 
 - Really difficult to estimate model parameters with small amount of data
 - Iterative Gibbs Sampling can be quite intensive
+- High FDP compared to previous approaches
 
 ## Further Directions
 
