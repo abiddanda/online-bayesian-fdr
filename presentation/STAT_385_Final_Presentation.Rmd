@@ -8,6 +8,9 @@ output:
     center: true
     transition: slide
     slideNumber: true
+    includes: 
+      after_body: html/doc_suffix.html
+
 ---
 
 ```{r setup, include=FALSE}
@@ -25,6 +28,10 @@ Imagine that new data is presented to us sequentially over time. There are many 
 <center>
 <img src="img/general_intro.jpg" width="325" height="325" style="background:none; border:none; box-shadow:none;">
 </center>
+
+<aside class="notes">
+  Oh hey, these are some notes. They'll be hidden in your presentation, but you can see them if you open the speaker notes window (hit 's' on your keyboard).
+</aside>
 
 ## Challenges in Online FDR Control
 
@@ -98,7 +105,7 @@ Here we assume that we only know the parameters of the null component, but we ha
 *How should we do the parameter estimation?* 
 
 <center>
-<img src="img/thinking.jpg" width="200" height="150" style="background:none; border:none; box-shadow:none;">
+<img src="img/thinking2.png" width="100" height="100" style="background:none; border:none; box-shadow:none;">
 </center>
 
 ## Gibbs Sampler  
