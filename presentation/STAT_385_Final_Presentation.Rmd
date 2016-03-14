@@ -108,7 +108,7 @@ $D_{t-1}$ is all the discoveries made up to the last time step
 
 A Bayesian approach to FDR control considers an underlying mixture distribution consisting of *null* and *signal* components, and controls FDR based on the parameters of this distribution. 
 
-```{r, fig.align='center', fig.height=3, echo=FALSE, warning=FALSE, message=FALSE}
+```{r, fig.align='center', fig.height=3, echo=FALSE, eval=FALSE, warning=FALSE, message=FALSE}
 library(ggplot2)
 library(dplyr)
 Mixture.List.Sim1 <- readRDS("../data/sim3_1000_08_3_1.rds")
@@ -174,11 +174,16 @@ Here we propose to:
 Our approach provides the ability to sample from the posterior of $Z$ when estimating the mixture model rather than fixing the number of discoveries as in LBOND and LBORD.
 </i>
 
+<aside class="notes">
+ The assumption of LBOND and LBORD is that we have access only to what we called a discovery in the past, not the data itself. Here we have access to the data and are able to estimate model parameters using the data itself. We can't change our past decisions, but we can use the data to construct our model fit. 
+</aside>
+
+
 ## Simulation Scenario
 
 - We simulate 1000 time points, and a Z-score from each time point given $\theta = \{\pi = 0.8, \mu_1 = 3, \sigma^2_1 = 1\}$
 
-```{r, fig.height=3, echo=FALSE, warning=FALSE, message=FALSE}
+```{r, fig.height=3, echo=FALSE, eval=FALSE, warning=FALSE, message=FALSE}
 library(ggplot2)
 Mixture.List.Sim1 <- readRDS("../data/sim3_1000_08_3_1.rds")
 X <- Mixture.List.Sim1$Z
@@ -190,9 +195,13 @@ p <- qplot(seq_along(X), X, xlab="t",ylab="X_t") + ggsave("img/simulation_points
 <img src="img/simulation_points.png" height="400" style="background:none; border:none; box-shadow:none;">
 </center>
 
+<aside class="notes">
+ The simulation example that we used here is similar in nature to the ones that were used in Rina's examples for the LBOND and LBORD (just now with more time points)
+</aside>
+
 ## Gibbs Results 
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE}
+```{r, echo=FALSE, warning=FALSE, eval=FALSE, message=FALSE}
 library(ggplot2)
 library(dplyr)
 library(cowplot)
@@ -231,17 +240,34 @@ p4 <- plot_grid(p3, p1, p2, nrow = 3) + ggsave("img/gibbs_results.png")
 <img src="img/gibbs_results.png" width="700" height="600" style="background:none; border:none; box-shadow:none;">
 </center>
 
+<aside class="notes">
+  As expected, we can see that our parameter estimates in the beginning are really quite terrible. However, the credible intervals tighten up quite quickly (presumably due to the number of signals). This allows us to choose the parameters at each time-point that would provide the most conservative measurements of the critical threshold at which we would want to reject a particular z-score. Effectively we choose the 5th quantile of the mean, and the upper 95th quantile of both the proportion of nulls and the signal variance. 
+</aside>
+
 ## Gibbs Results
 
 <img src="img/xhat.png" height="600" style="background:none; border:none; box-shadow:none;">
+
+<aside class="notes">
+  What we show here is that our critical value is always above the value that we would have gotten if we had known the parameters of the mixture model at the beginning. It is more conservative at the beginning of the data stream, and closer to the optimal at the end. It is highly encouraging that we are conservative in the beginning since we do not have good estimates of the models yet. 
+</aside>
+
 
 ## FDP
 
 <img src="img/fdp_empirical.png" style="background:none; border:none; box-shadow:none;">
 
+<aside class="notes">
+  Here we compare the false-discovery proportion (FDP) empirically from our simulation. Alpha-investing and LBOND have zero false-discoveries in our simulation, whereas our method definitely has a couple of false-positives. However, we are still well-below the acceptable false-discovery proportion (with alpha = 0.1). 
+</aside>
+
 ## Power
 
 <img src="img/power_empirical.png" style="background:none; border:none; box-shadow:none;">
+
+<aside class="notes">
+  Here we can really see the benefit of our method in this setting. While we do not have as low of a False-discovery proportion as the other online methods, we certainly are able to have a much higher power. 
+</aside>
 
 ## Caveats
 
@@ -249,12 +275,20 @@ p4 <- plot_grid(p3, p1, p2, nrow = 3) + ggsave("img/gibbs_results.png")
 - Gibbs Sampling at each time point can be quite intensive (especially for later time points)
 - High FDP compared to previous approaches
 
+<aside class="notes">
+  Another possibility is that the mean actually is not terribly different, but just that the signal variance is massive. We still have to think more carefully what we would like to do in this scenario.  
+</aside>
+
 ## Further Directions
 
 - More efficient inference procedure than MCMC
 - Explore consequences of how frequently we re-estimate the model
 - Correlation among the signals (i.e. simulate from a Markov Chain)
 - Explore different modeling assumptions for signal and null distributions (i.e. multiple components in the mixture model)
+
+<aside class="notes">
+  Something that is critical here is that MCMC is really difficult to run at each iteration. It might be advantageous to use the MCMC estimates only after a certain point. Correlation in the underlying signal distribution can potentially bias the estimates that we get early on. 
+</aside>
 
 ## Acknowledgements
 
