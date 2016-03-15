@@ -98,7 +98,7 @@ In alpha-investing we define a wealth function w. When we reject the null, the w
 
 1. At time $t$ set $\alpha_t = \beta_t \cdot max\{1, D_{t - 1}\}$ where $\sum^\infty_{t=1} \beta_t = \alpha$
 2. Reject if $P_t \leq \alpha_t$
-3. If discovery add to to $D$
+3. If discovery add to $D$
 
 *LBORD follows the same general idea, but we keep track of when the last discovery was made*
 
