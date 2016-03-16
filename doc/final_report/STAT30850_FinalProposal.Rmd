@@ -230,7 +230,8 @@ plot(mu1.test, bayes.fdr.mu1, main="mu1", type='l')
 plot(sigma2.test, bayes.fdr.sigma2, main="sigma2", type='l')
 ```
 
-**Figure 4** : The 
+<!-- TODO : get this into an actual figure... -->
+<!-- **Figure 4** :  -->
 
 From the experiments above we have established that we are the most conservative when the following conditions hold: 
 
@@ -238,22 +239,38 @@ From the experiments above we have established that we are the most conservative
 2. $\mu_1$ is low (closer to the null value)
 3. $\sigma^2_1$ is high (the signal distribution is made more variable)
 
-From these conclusions on the behavior of Bayesian FDR, we are able to get reasonably conservative bounds on the parameters that we desire. We take the lower bound of the 95% credible interval for $\mu_1$, and the upper bound of the 95% credible interval for $\pi_0$ and $\sigma^2_1$. The resulting values of $\hat{x}$ using these bounds are shown in *Figure 5*. It is promising to see that these estimates are higher than the value of $\hat{x}$ than if we knew the parameters of the mixture model *a priori*.  
+From these conclusions on the behavior of Bayesian FDR, we are able to get reasonably conservative bounds on the parameters that we desire. We take the lower bound of the 95% credible interval for $\mu_1$, and the upper bound of the 95% credible interval for $\pi_0$ and $\sigma^2_1$. The resulting values of $\hat{x}$ using these bounds are shown in *Figure 5*. It is promising to see that these estimates are higher than the value of $\hat{x}$ than if we knew the parameters of the mixture model beforehand.  
+  
+\begin{figure}[H]  
+  \includegraphics{../../presentation/img/xhat}  
+  \caption{Plot of $\hat{x}$ with respect to time. We take the lower bound of the 95\% credible interval for $\mu_1$ and the upper bound for both $\pi_0$ and $\sigma^2_1$. The dashed line represents the $\hat{x}$ value using the true parameters for the simulation.}  
+\end{figure}
 
-![](../../presentation/img/xhat.png)
-
-**Figure 5**: * Plot of $\hat{x}$ with respect to time. We take the lower bound of the 95% credible interval for $\mu_1$ and the upper bound for both $\pi_0$ and $\sigma^2_1$. The dashed line represents the $\hat{x}$ value using the true parameters for the simulation. 
 
 ### Empircal Estimates of FDP and Power
 
-![](../../presentation/img/fdp_empirical.png)
+In order to compare our method against $\alpha$-investing, LBOND, and LBORD, we ran all of the methods on our simulation data and plotted the false discovery proportion (FDP) and the power. The FDR is the expected value of the FDP, and the power is the proportion of the true signals that we are able to discover. 
 
-**Figure 6**: *
+As we see in *Figure 5* we are able to see that the most conservative methods ($\alpha$-investing, and LBOND) do not have any false discoveries. LBORD has a few false discoveries, which are likely a result of resetting the thresholds after making a discovery. Our sequential Gibbs sampling method has considerably more false discoveries than LBORD but still lies well below the global $\alpha = 0.10$ threshold.   
 
-![](../../presentation/img/power_empirical.png)
+\begin{center}
+  \begin{figure}[H]
+  \includegraphics{../../presentation/img/fdp_empirical}
+  \caption{Empirical estimates of FDP in simulation data}
+  \end{figure}
+\end{center}
 
-**Figure 7**: *
+Where our method really shines is in the power comparisons to the other online hypothesis testing methods. We see that the most conservative methods in terms of FDP are also the least powerful methods. LBORD has a considerable amount of power ($\sim 0.42$) while retaining a lower FDP than our method, but our sequential Gibbs method has considerably higher power than LBORD ($\sim 0.78$). The relative power between the different online testing methods can be seen in *Figure 6*.
 
-## Conclusion
+\begin{center}
+  \begin{figure}[H]
+  \includegraphics{../../presentation/img/power_empirical}
+  \caption{Empirical estimates of Power in simulation data}
+  \end{figure}
+\end{center}
+
+## Conclusions
+
+From our initial simulation study, we have shown that our method for sequential Gibbs sampling performs quite well under these particular simulation conditions.
 
 ## References
