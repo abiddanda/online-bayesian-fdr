@@ -65,14 +65,32 @@ In Levels Based on Number of Discoveries (LBOND) we define a series of weights $
 
 Levels Based on Recent Discoveries follows a similar appraoch but uses weights from the time when the last discovery was made.  
 
-TODO: Fill Description of LBORD
+1. At time $t$ set $\alpha_t = \beta_t \cdot max\{1, D_{t - \tau{t}}\}$ where $\sum^\infty_{t=1} \beta_t = \alpha$
+2. Reject if $P_t \leq \alpha_t$
+3. If discovery add to $D$
+4. Repeat
+
+Where $\tau(t)$ is the time of the most recent discovery before time $t$ and $\tau(t)$ starts by being set to zero. LBORD has consistent pwoer over time becuase the $\beta$ threshold is reset after each discovery.
 
 ## Methods 
 
+### Bayesian FDR
+
 Here we propose to apply a Bayesian approach to FDR control to the online testing setting. Specifically we follow the work of Efron and model our streaming data as test statistics coming from a mixture model [CITE]. A Bayesian approach to FDR control considers an underlying mixture distribution consisting of *null* and *signal* components, and controls FDR based on the parameters of this distribution:
 
-![Mixture Density](../../presentation/img/mixture_density.png)
-***Figure 1**: Mixture densitiy yadadada*
+```{r, fig.align='center', fig.height=3.5, echo=FALSE, warning=FALSE, message=FALSE}
+library(ggplot2)
+library(dplyr)
+Mixture.List.Sim1 <- readRDS("../../data/sim3_1000_08_3_1.rds")
+X <- Mixture.List.Sim1$Z
+Z <- Mixture.List.Sim1$true_signals
+df <- data.frame(Z=Z, X=X) %>% mutate(Z = ifelse(Z == 1, "signal", "null"))
+
+p <- ggplot(df, aes(X,fill=Z)) + geom_density(alpha=0.4) 
+p
+```
+
+***Figure 1**: Density of a mixture distribution of gaussians simulated with 80\% proportion of nulls, the mean of the signal component at 3, variance of the signal component at 1, the mean of the null component at 0 and the variance of the null component at 1*
 
 Let:
 
@@ -85,11 +103,32 @@ $X$ can be modeled as a mixture of Gaussians:
 
 $$X \mid \pi_0, \mu_1, \sigma^2_1 \sim \pi_0 N(0,1) + (1 - \pi_0) N(\mu_1, \sigma^2_1)$$
 
-In *Figure 1* we can see a plot the resulting density of a simulated mixture model with the underlying parameters $\theta = \{\mu_0 = , \sigma^2_0 = 1, \pi_0 = .8, \mu_1 = 3, \sigma^2_1 = 1 \}$. We can see that assuming the data comes from an underlying mixture model with diverged means between the signal and null components can provide valuable information and flexibile approaches to controlling FDR. Paticularly if we assume that we only know the parameters of the null component, but we have to estimate $\pi_0, \mu_1, \sigma^2_1$ then we can control FDR at level:
+In *Figure 1* we can see a plot the resulting density of a simulated mixture model with the underlying parameters $\theta = \{\mu_0 = , \sigma^2_0 = 1, \pi_0 = .8, \mu_1 = 3, \sigma^2_1 = 1 \}$. We can see that assuming the data comes from an underlying mixture model with diverged means between the signal and null components can provide valuable information and flexibile approaches to controlling FDR. Paticularly if we assume that we only know the parameters of the null component. We can find the Bayesian interpretation of FDR by (following homework 2):
+
+$$ \hat{FDR(x)} = E[\hat{FDP(x)}] $$
+
+the expectation of the denominator is 
+
+$$E[\# X \geq z] = n P(X \geq x)$$ 
+
+becuase this should be binomially distrubed with size n and $p = P(X \geq x)$ thus one can rewrite the $\hat{FDR(x)}$ as 
+
+$$ \hat{FDR(x)} = E[\frac{n(1 - \Phi(x))}{n(\pi_0 (1 - \Phi(x)) + (1 - \pi_0)(1 - \Phi(\frac{x - \mu_1}{\sigma_1}))}] $$
+$$ = E[\frac{(1 - \Phi(x))}{(\pi_0 (1 - \Phi(x)) + (1 - \pi_0)(1 - \Phi(\frac{x - \mu_1}{\sigma_1}))}]$$
+
+This is a constant thus 
+
+$$ = \frac{(1 - \Phi(x))}{(\pi_0 (1 - \Phi(x)) + (1 - \pi_0)(1 - \Phi(\frac{x - \mu_1}{\sigma_1}))} $$
+
+We can see that if we estimate $\pi_0, \mu_1, \sigma^2_1$ then we can control FDR at a given level:
 
 $$\alpha = \frac{\pi_0(1 - \Phi(\hat{x}))}{\pi_0(1 - \Phi(\hat{x})) + (1-\pi_0)\left(1 - \Phi\left(\frac{\hat{x} -\mu_1}{\sigma_1}\right)\right)}$$
 
-Where we reject $X$ if $X > \hat{x}$. We apply this mixture model framework to online testing by estimating the unknown parameters of the gaussian mixture model described above at each time point $t$. Specifically we use a Markov Chain Monte Carlo approach to sample from the posterior distributions of the unknown parameters $\theta = \{\pi_0, \mu_1, \sigma^2_1\}$. 
+Where we reject $X$ if $X > \hat{x}$. 
+
+### Markov Chain Monte Carlo (Gibbs Sampler)
+
+We apply this mixture model framework to online testing by estimating the unknown parameters of the gaussian mixture model described above at each time point $t$. Specifically we use a Markov Chain Monte Carlo approach to sample from the posterior distributions of the unknown parameters $\theta = \{\pi_0, \mu_1, \sigma^2_1\}$. 
 
 Let:  
 
@@ -130,7 +169,68 @@ $$P(Z_t \mid X_t = x_t, \pi_0, \mu_1, \phi_1) = \frac{\pi_0 exp(-\frac{x^2_t}{2}
 
 ## Results
 
-## Discussion 
+```{r, fig.height=3.5, echo=FALSE, warning=FALSE, message=FALSE}
+library(ggplot2)
+Mixture.List.Sim1 <- readRDS("../../data/sim3_1000_08_3_1.rds")
+X <- Mixture.List.Sim1$Z
+
+p <- qplot(seq_along(X), X, xlab="t",ylab="X_t")
+p
+```
+
+***Figure 2**: *
+
+
+
+```{r, fig.height=3.5, echo=FALSE, warning=FALSE, message=FALSE}
+library(ggplot2)
+library(dplyr)
+library(cowplot)
+
+# Computing credible intervals of the different parameters
+cred_intervals <- function(sum_stat_mat){
+  n <- nrow(sum_stat_mat)
+  cred.int <- matrix(NA, nrow=n, ncol=3)
+  for (i in 1:n){
+    cred.int[i, ] <- quantile(sum_stat_mat[i,], c(0.05,0.5,0.95))
+    if (cred.int[i,1] < 0){cred.int[i,1] <- 0.0}
+  }
+  return(cred.int)
+}
+
+gibbs1000_samples <- readRDS("../../data/sim3_1000_08_3_mcmc1.rds")
+mu.credint2 <- cred_intervals(gibbs1000_samples$mu.samples)
+df <- data.frame(fit=mu.credint2[,2], lwr=mu.credint2[,1], upr=mu.credint2[, 3])
+df <- as.data.frame(df) %>% mutate(t = row_number())
+p1 <- ggplot(df, aes(x = t, y = fit)) + geom_line() + geom_ribbon(aes(ymin=lwr, ymax=upr, alpha=.2, fill = "#fdae6b")) + ylim(0, 5) + ylab("mu1") + guides(fill=FALSE, alpha=FALSE) + theme_gray() + geom_hline(yintercept=3, linetype="dashed")
+
+sigma2.credint <- cred_intervals(gibbs1000_samples$sigma2.samples)
+df <- data.frame(fit=sigma2.credint[,2], lwr=sigma2.credint[,1], upr=sigma2.credint[, 3])
+df <- as.data.frame(df) %>% mutate(t = row_number()) %>% rowwise() %>% mutate(upr = ifelse(upr > 5, 5, upr))
+p2 <- ggplot(df, aes(x = t, y = fit)) + geom_line() + geom_ribbon(aes(ymin=lwr, ymax=upr, alpha=.2, fill = "#fdae6b")) + ylim(0, 5) + ylab("sigma2_1") + guides(fill=FALSE, alpha=FALSE) + theme_gray() + geom_hline(yintercept=1, linetype="dashed")
+
+pi0.credint <- cred_intervals(gibbs1000_samples$pi0.samples)
+df <- data.frame(fit=pi0.credint[,2], lwr=pi0.credint[,1], upr=pi0.credint[, 3])
+df <- as.data.frame(df) %>% mutate(t = row_number())
+p3 <- ggplot(df, aes(x = t, y = fit)) + geom_line() + geom_ribbon(aes(ymin=lwr, ymax=upr, alpha=.2, fill = "#fdae6b")) + ylim(0, 1.0) + ylab("pi0") + guides(fill=FALSE, alpha=FALSE) + theme_gray() + geom_hline(yintercept=.8, linetype="dashed")
+
+p4 <- plot_grid(p3, p1, p2, nrow = 3)
+p4
+```
+
+***Figure 3**: *
+
+![](../../presentation/img/xhat.png)
+
+***Figure 4**: *
+
+![](../../presentation/img/fdp_empirical.png)
+
+***Figure 5**: *
+
+![](../../presentation/img/power_empirical.png)
+
+***Figure 6**: *
 
 ## Conclusion
 
