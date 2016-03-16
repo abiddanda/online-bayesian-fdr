@@ -69,7 +69,66 @@ TODO: Fill Description of LBORD
 
 ## Methods 
 
-Here we propose to apply a Bayesian approach to FDR control in the online testing setting. Specifically we follow the work of Efron and model our streaming data as test statistics coming from a mixture model
+Here we propose to apply a Bayesian approach to FDR control to the online testing setting. Specifically we follow the work of Efron and model our streaming data as test statistics coming from a mixture model [CITE]. A Bayesian approach to FDR control considers an underlying mixture distribution consisting of *null* and *signal* components, and controls FDR based on the parameters of this distribution:
+
+![Mixture Density](../../presentation/img/mixture_density.png)
+***Figure 1**: Mixture densitiy yadadada*
+
+Let:
+
+$X$ - be a test statistic  
+$\pi_0$ - be the proportion of nulls  
+$\mu_1$ - be the mean of the signals  
+$\sigma^2_1$ - be the variance of the signals  
+
+$X$ can be modeled as a mixture of Gaussians:
+
+$$X \mid \pi_0, \mu_1, \sigma^2_1 \sim \pi_0 N(0,1) + (1 - \pi_0) N(\mu_1, \sigma^2_1)$$
+
+In *Figure 1* we can see a plot the resulting density of a simulated mixture model with the underlying parameters $\theta = \{\mu_0 = , \sigma^2_0 = 1, \pi_0 = .8, \mu_1 = 3, \sigma^2_1 = 1 \}$. We can see that assuming the data comes from an underlying mixture model with diverged means between the signal and null components can provide valuable information and flexibile approaches to controlling FDR. Paticularly if we assume that we only know the parameters of the null component, but we have to estimate $\pi_0, \mu_1, \sigma^2_1$ then we can control FDR at level:
+
+$$\alpha = \frac{\pi_0(1 - \Phi(\hat{x}))}{\pi_0(1 - \Phi(\hat{x})) + (1-\pi_0)\left(1 - \Phi\left(\frac{\hat{x} -\mu_1}{\sigma_1}\right)\right)}$$
+
+Where we reject $X$ if $X > \hat{x}$. We apply this mixture model framework to online testing by estimating the unknown parameters of the gaussian mixture model described above at each time point $t$. Specifically we use a Markov Chain Monte Carlo approach to sample from the posterior distributions of the unknown parameters $\theta = \{\pi_0, \mu_1, \sigma^2_1\}$. 
+
+Let:  
+
+$t$ - time index of a test statistic streaming in  
+$X$ - a vector of $t$ test statistics that have streamed in  
+$X_t$ - the test statistic at the $t^{th}$ time point  
+$Z$ - vector of latent states of $X_t$ being a signal or null  
+$Z_t$ - latent state at time $t$ of $X_t$ being a signal or null  
+$\pi_0$ - proportion of nulls  
+$\mu_1$ - mean of the signals  
+$\sigma^2_1$ - variance of the signals  
+
+As described above we model $X_t$ as a mixture of Gaussians:
+
+$$X_t \mid \pi_0, \mu_1, \sigma^2_1 \sim \pi_0 N(0,1) + (1 - \pi_0) N(\mu_1, \sigma^2_1)$$
+$$X_t \mid Z_t = 0 \sim N(0, 1)$$
+$$X_t \mid Z_t = 1, \mu_1, \sigma^2_1 \sim N(\mu_1, \sigma^2_1)$$
+
+We can reparameterize this model in terms of the precision $\phi_1$ of the signals and write down the likelihood of the model conditioned on the latent indicators as:
+
+$$L(\pi_0, \mu_1, \sigma^2_1 \mid X, Z) \propto (\pi_0)^{n_0} exp(-\frac{1}{2} \sum_{t:z_t = 0} x_t^2) \cdot (1 - \pi_0)^{n_1} exp(-\frac{\phi_1}{2} \sum_{t:z_t = 1} (x_t - \mu_1)^2)$$
+
+where $n_0$ and $n_1$ are the number of observed nulls and signals respectively. We can then set priors on $\pi_0, \mu_1, \phi_1$ which satisfy conjugacy:
+
+$$\pi_0 \sim Beta(\alpha, \beta)$$
+$$\phi_1 \sim Gamma(\frac{a}{2}, \frac{b}{2})$$
+$$\mu_1 \mid \phi_1 \sim Normal(\mu^{*}, \frac{1}{\alpha^{*} \phi_1})$$
+
+thus the posterior distributions of these parameters can be written as:
+
+$$\pi_0 \mid X, Z = 0 \sim Beta(\alpha + n_0, \beta + n_1)$$
+$$\phi_1 \mid X, Z \sim Gamma(\frac{a + n_1}{2}, b + \sum_{t:z_t = 1} (x_t - \mu_1)^2)$$
+$$\mu_1 \mid X, Z, \phi_1 \sim Normal(\frac{\alpha^{*} \mu^{*} + n_1 + \bar{x_1}}{\alpha^{*} + n_1}, \frac{1}{(\alpha^{*} + n_1) \phi_1})$$
+
+We also need to sample from the posterior of $Z$ due to the conditional dependencies above:
+
+$$P(Z_t \mid X_t = x_t, \pi_0, \mu_1, \phi_1) = \frac{\pi_0 exp(-\frac{x^2_t}{2})}{\pi_0 exp(-\frac{x^2_t}{2}) + ((1 - \pi_0) \phi_1 exp(-\frac{\phi_1}{2} (x_t - \mu_1)^2))}$$
+
+## Results
 
 ## Discussion 
 
