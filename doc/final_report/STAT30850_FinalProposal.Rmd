@@ -244,6 +244,19 @@ Where our method really shines is in the power comparisons to the other online h
 
 ## Conclusions
 
-From our initial simulation study, we have shown that our method for sequential Gibbs sampling performs quite well under these particular simulation conditions.
+From our initial simulation study, we have shown that our method for sequential Gibbs sampling performs quite well under the simulated conditions. However we would have to perform additional experiments under varied conditions in order to evaluate the performance of our new method under a variety of conditions. It should be noted that there is no absolute guarantee that the bounds of the credible interval will always lie above and below the true parameter in question. In fact this issue may well present itself more readily under different simulation parameters (i.e. under a larger proportion of nulls or a weaker signal mean)
+
+With these caveats we propose a number of extensions and future directions for teh development of our method:
+
+1. Explore the impact of correlation within the signals. It is known that these correlations adversely affect the performance $\alpha$-investing and LBOND and LBORD in terms of their FDR control. These correlations could be set in such a way that the statistics are drawn from a markov chain such that the stationary distribution is identical to the mixture distribution, or that there is simply a block of time during which many of the signals occur. 
+
+2. Running the Gibbs sampler in ``sparsely''. We currently estimate the model at every time step, which means that we are performing an increasing number of operations as the data is increasing in number as well. We could potentially relax the invariant that we must re-estimate the model at each time-point, and instead estimate estimate the model every $k$ timepoints. We could potentially fit some decreasing function such as LBOND or LBORD in between the parameter estimation in order to maintain proper FDR control.  
+
+3. Explore different model assumptions for the distribution of test statistics. While a mixture of normal distributions is mathematically convenient, it may not accurately represent the underlying distribution of the test statistics. One advantage of heuristic-based methods such as $\alpha$-investing and LBOND/LBORD is that there are essentially no distributional requirements on the test statistics themselves but in that the P-values come from a uniform distribution when null. Our method may be adaptable to different distributional requirements for the distribution of the test statistics as well. 
+
+## Code for Simulation and Replicability
+
+We have placed our simulations and reports generated in the following GitHub repository:
+[\texttt{https://github.com/abiddanda/online-bayesian-fdr}](https://github.com/abiddanda/online-bayesian-fdr)
 
 ## References
