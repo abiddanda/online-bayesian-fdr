@@ -16,9 +16,9 @@ output: pdf_document
 
 ## Introduction 
 
-There are many contexts where data is observed sequentially through time. For instance in high frequency stock trading, investment firms have to make rapid decisions in response to new stock evaluations within hundredths of a second, in A/B testing, technology companies often test the effect of varied advertisements on the "click behavior" of a user which is correlated with the effectiveness of the advertisement, or finally in genomics / or clinical trail applications streaming data can be common [@kohavi2009controlled, @javanmard2015online, @aharoni2014generalized]. The setting in which hypothesis testing must be performed on sequential-streaming data is called "online testing". 
+There are many contexts where data is observed as a incoming stream of datapoints sequentially through time. In high frequency stock trading, investment firms have to make rapid decisions in response to new stock evaluations within hundredths of a second. Another example is when technology companies test the effects of advertisements on the "click behavior" of a user through A/B testing,  which measures the effectiveness of the advertisement [@kohavi2009controlled, @javanmard2015online, @aharoni2014generalized]. The setting in which hypothesis testing must be performed on streaming data, with only access to the previous data, is called "online testing".
 
-In online testing controlling the False Discovery Rate (FDR) at a given level has unique challenges as one does not observe all the data beyond the current time point. Here we propose to use and implement a Bayesian model-based approach to control FDR in the online testing setting. We review and contrast our approach to previous commonly used heuristics / algorithms that are effective at controlling FDR but conservative (low power) in online hypothesis testing. We show our approach has higher power when compared to previous methods. Finally, we discuss future extensions, caveats, and applications of our method.
+In online testing, controlling the False Discovery Rate (FDR) at a given level has unique challenges as one does not observe all the data beyond the current time point. Here we propose a Bayesian approach to control FDR in the online testing setting. We review and contrast our method to previously developed algorithms that control FDR in online hypothesis testing, but are generally conservative (low power). We show our approach has higher power when compared to previous methods, while still maintaining FDR control through empirical simulations. Finally, we discuss future extensions, caveats, and applications of our method.
 
 ## Background
 
@@ -34,7 +34,7 @@ $P_t$ - be a p-value output from an arbitrary test at time $t$
 $\alpha$ - a global level for FDR control     
 $\alpha_t$ - a time specific level for FDR control    
 
-In $\alpha$-investing one defines a wealth function $w$. We imagine p-values are streaming to the researcher/statistician over time $t$ which are provided by some arbitrary test. We then proceed to run the $\alpha$-investing procedure:
+In $\alpha$-investing, one defines a wealth function $w$ representing the amount of "wealth" or how much we can "afford" a false-positive. We imagine p-values are streaming to the researcher/statistician over time $t$ which are provided by some arbitrary test. We then proceed to run the $\alpha$-investing procedure:
 
 1. Set $w(t=0) = \alpha$  
 2. At time $t$ choose $\alpha_t \leq \frac{w(t-1)}{1 + w(t - 1)}$  
@@ -50,7 +50,9 @@ $$
 4. Repeat the procedure starting back at (2) for time $t+1$.
 
 
-As we can see above when we reject the null, the wealth function grows and when we fail to reject the null the wealth function decays. Specifically at time 0 we set the wealth function to a "global level" $\alpha$. We then proceed to set a time specific $\alpha_t$. We then reject or fail to reject the p-value $P_t$ from time $t$ and redefine our wealth function $w$ depending on what decision was made. This ensures that the more discoveries we make the less stringent we are through time and reciprocally the fewer discoveries we make the more stringent we are through time. For instance, if we fail to reject the null hypothesis for a long stretch of time, a p-value must be exceptionally low to overcome the current state of the wealth function. 
+As we can see above when we reject the null, the wealth function grows and when we fail to reject the null the wealth function decays. Specifically at time 0 we set the wealth function to a "global level" $\alpha$. We then proceed to set a time specific $\alpha_t$. We then reject or fail to reject the p-value $P_t$ from time $t$ and redefine our wealth function $w$ depending on what decision was made. 
+
+This ensures that the more discoveries we make the less stringent we are (gaining wealth) and reciprocally the fewer discoveries we make we will be more stringent when deciding to reject a future datapoint (losing wealth). For instance, if we fail to reject the null hypothesis for a long stretch of time, a p-value must be exceptionally low to overcome the current state of the wealth function. 
 
 ### LBOND / LBORD
 
@@ -62,7 +64,7 @@ $\alpha$ - a global level that one would like to control FDR at
 $\beta_t$ - a time specific weight  
 $D_t$ - count of discoveries made up to time $t$  
 
-In LBOND we define a series of weights $\beta_t$ which all sum up to the global level $\alpha$. We then set a time specific $\alpha_t$ equal to the weight at time $t$ multiplied by the max of 1 and the number of discoveries made up to the last time step $D_{t-1}$. We reject a p-value $P_t$ if it is less that $\alpha_t$ and add to our discovery count. 
+In LBOND we define a series of weights $\beta_t$ which sum up to the global level $\alpha$. We then set a time specific $\alpha_t$ equal to the weight at time $t$ multiplied by the max of 1 and the number of discoveries made up to the last time step $D_{t-1}$. We reject a p-value $P_t$ if it is less than $\alpha_t$ and add to our discovery count. 
 
 1. At time $t$ set $\alpha_t = \beta_t \cdot max\{1, D_{t - 1}\}$ where $\sum^\infty_{t=1} \beta_t = \alpha$
 2. Reject if $P_t \leq \alpha_t$
@@ -76,7 +78,7 @@ Levels Based on Recent Discoveries follows a similar approach but uses weights f
 3. If discovery add to $D$
 4. Repeat procedure starting at (1) for time $t+1$
 
-Where $\tau(t)$ is the time of the most recent discovery before time $t$ and $\tau(t = 0) = 0$. LBORD has consistent power over time because the $\beta$ weight is reset after each discovery.
+Where $\tau(t)$ is the time of the most recent discovery before time $t$ and $\tau(t = 1) = 0$. LBORD has consistent power over time because the $\beta$ weight is reset after each discovery.
 
 ## Methods 
 
@@ -102,11 +104,11 @@ $X$ can be modeled as a mixture of Gaussians:
 
 $$X \mid \pi_0, \mu_1, \sigma^2_1 \sim \pi_0 N(0,1) + (1 - \pi_0) N(\mu_1, \sigma^2_1)$$
 
-In *Figure 1* we can see a plot the resulting density of a simulated mixture model with the underlying parameters $\theta = \{\mu_0 = , \sigma^2_0 = 1, \pi_0 = 0.8, \mu_1 = 3, \sigma^2_1 = 1 \}$. We can see that assuming the data comes from an underlying mixture model with diverged means between the signal and null components can inform flexible approaches to control FDR. Particularly, we assume that we only know the parameters of the null component. We can find the Bayesian interpretation of FDR:
+In *Figure 1* we can see a plot the resulting density of a simulated mixture model with the underlying parameters $\theta = \{\pi_0 = 0.8, \mu_1 = 3, \sigma^2_1 = 1 \}$. We can see that assuming the data comes from an underlying mixture model with diverged means between the signal and null components can inform flexible approaches to control FDR. Particularly, we assume that we only know the parameters of the null component. We can find the Bayesian interpretation of FDR:
 
 $$
 \begin{aligned}
-\hat{FDR(x)} &= \mathbb{E}[\hat{FDP(x)}]\\
+\widehat{FDR}(x) &= \mathbb{E}[\widehat{FDP}(x)]\\
   &= \mathbb{E}\Bigg[\frac{P(X \in H_0, X > x)}{P(X > x)}\Bigg]\\
   &= \mathbb{E}\Bigg[\frac{\pi_0(1 - \Phi(x))}{(\pi_0 (1 - \Phi(x)) + (1 - \pi_0)(1 - \Phi(\frac{x - \mu_1}{\sigma_1}))}\Bigg] \\
   &= \frac{\pi_0(1 - \Phi(x))}{(\pi_0 (1 - \Phi(x)) + (1 - \pi_0)(1 - \Phi(\frac{x - \mu_1}{\sigma_1}))}
@@ -114,7 +116,7 @@ $$
 $$
 
 
-We can see that if we know $\pi_0, \mu_1, \sigma^2_1$ then we can control FDR at a given level:
+If we know $\pi_0, \mu_1,$ and  $\sigma^2_1$, then we can control FDR at a given level:
 
 $$\alpha = \frac{\pi_0(1 - \Phi(\hat{x}))}{\pi_0(1 - \Phi(\hat{x})) + (1-\pi_0)\left(1 - \Phi\left(\frac{\hat{x} -\mu_1}{\sigma_1}\right)\right)}$$
 
@@ -122,7 +124,7 @@ Where we reject $X$ if $X > \hat{x}$.
 
 ### Markov Chain Monte Carlo (Gibbs Sampler)
 
-We apply this mixture model framework to online testing by estimating the unknown parameters of the Gaussian mixture model described above at each time point $t$. Specifically we use a Markov Chain Monte Carlo approach to sample from the posterior distributions of the unknown parameters $\theta = \{\pi_0, \mu_1, \sigma^2_1\}$. 
+We apply this mixture model framework to online testing by estimating the unknown parameters of the Gaussian mixture model described above at each time point $t$. Specifically, we use a Markov Chain Monte Carlo approach to sample from the posterior distributions of the unknown parameters $\theta = \{\pi_0, \mu_1, \sigma^2_1\}$. 
 
 Let:  
 
@@ -141,7 +143,7 @@ $$X_t \mid \pi_0, \mu_1, \sigma^2_1 \sim \pi_0 N(0,1) + (1 - \pi_0) N(\mu_1, \si
 $$X_t \mid Z_t = 0 \sim N(0, 1)$$
 $$X_t \mid Z_t = 1, \mu_1, \sigma^2_1 \sim N(\mu_1, \sigma^2_1)$$
 
-We can reparameterize this model in terms of the precision $\phi_1$ of the signals and write down the likelihood of the model conditioned on the latent indicators as:
+We can reparameterize this model in terms of the precision $\phi_1$ of the signals and write down the likelihood conditioned on the latent indicators as:
 
 $$L(\pi_0, \mu_1, \sigma^2_1 \mid X, Z) \propto (\pi_0)^{n_0} exp(-\frac{1}{2} \sum_{t:z_t = 0} x_t^2) \cdot (1 - \pi_0)^{n_1} exp\left(-\frac{\phi_1}{2} \sum_{t:z_t = 1} (x_t - \mu_1)^2\right)$$
 
@@ -183,7 +185,7 @@ We simulated independent and identically distributed data from a mixture model w
 From these simulated values we applied our Gibbs sampler to perform parameter estimations at each time point. The algorithm proceeds as follows:
 
 1. At timestep $t$, use $X = (X_1, ... , X_t)$
-2. Run 1000 iterations of the Gibbs Sampler using $X$
+2. Run 1000 iterations of the Gibbs Sampler using $X$, inculding the current datapoint as well as all of the ones from the past. 
 3. After a burn-in period of 50 iterations, we then choose one sample every 10 iterations.
 4. Calculate the 95% credible interval from the posterior samples of the parameters
 5. Repeat for the $t+1$ timestep
@@ -197,12 +199,12 @@ In *Figure 3*  we can see the 95% credible intervals of the parameters as a func
 
 ### Estimating $\hat{x}$ Conservatively
 
-Intuitively in the beginning of the time-series we have very little data to estimate our model, and thus our Bayesian FDR threshold may not be valid if we take a summary of our parameter estimates such as the mean. Thus we performed some numerical experiments in order to determine the appropriate bounds of $\theta = \{\pi_0, \mu_1, \sigma^2_1\}$. We simply varied one of the parameters while keeping the others fixed to the parameters in our simulation. The results of these simulations are shown in *Figure 4*
+Intuitively in the beginning of the time-series we have very little data to estimate our model, and thus our Bayesian FDR threshold may not be valid if we take a summary of our parameter estimates such as the posterior mean. Thus we performed some numerical experiments in order to determine the appropriate bounds of $\theta = \{\pi_0, \mu_1, \sigma^2_1\}$. We simply varied one of the parameters while keeping the others fixed to the parameters in our simulation. The results of these simulations are shown in *Figure 4*
 
 \begin{center}
   \begin{figure}[H]
   \includegraphics{../../presentation/img/x_hat_experiments}
-  \caption{Plot of $\hat{x}$ with respect to time. We take the lower bound of the 95\% credible interval for $\mu_1$ and the upper bound for both $\pi_0$ and $\sigma^2_1$. The dashed line represents the $\hat{x}$ value using the true parameters for the simulation.}
+  \caption{Plot of $\hat{x}$ while varying different simulation parameters. Simulation parameters varied are specified on the x-axis.}
   \end{figure}
 \end{center}
 
@@ -212,7 +214,7 @@ From the experiments above we have established that we are the most conservative
 2. $\mu_1$ is low (closer to the null value)
 3. $\sigma^2_1$ is high (the signal distribution is made more variable)
 
-From these conclusions on the behavior of Bayesian FDR, we are able to get reasonably conservative bounds on the parameters that we desire. We take the lower bound of the 95% credible interval for $\mu_1$, and the upper bound of the 95% credible interval for $\pi_0$ and $\sigma^2_1$. The resulting values of $\hat{x}$ using these bounds are shown in *Figure 5*. It is promising to see that these estimates are higher than the value of $\hat{x}$ than if we knew the parameters of the mixture model beforehand.  
+From these conclusions on the behavior of Bayesian FDR, we are able to get conservative bounds on the parameters that we estimate. We take the lower bound of the 95% credible interval for $\mu_1$, and the upper bound of the 95% credible interval for $\pi_0$ and $\sigma^2_1$. The resulting values of $\hat{x}$ using these bounds are shown in *Figure 5*. It is promising to see that these estimates are higher than the value of $\hat{x}$ than if we knew the parameters of the mixture model beforehand.  
   
 \begin{figure}[H]  
   \includegraphics{../../presentation/img/xhat}  
@@ -222,9 +224,9 @@ From these conclusions on the behavior of Bayesian FDR, we are able to get reaso
 
 ### Empircal Estimates of FDP and Power
 
-In order to compare our method against $\alpha$-investing, LBOND, and LBORD, we ran all of the methods on our simulation data and plotted the false discovery proportion (FDP) and the power. The FDR is the expected value of the FDP, and the power is the proportion of the true signals that we are able to discover. 
+In order to compare our method against $\alpha$-investing and LBOND/LBORD, we ran all of the methods on our simulation data and plotted the false discovery proportion (FDP) and the power. The FDR is the expected value of the FDP, and the power is the proportion of the true signals that we are able to discover. 
 
-As we see in *Figure 5* we are able to see that the most conservative methods ($\alpha$-investing, and LBOND) do not have any false discoveries. LBORD has a few false discoveries, which are likely a result of resetting the thresholds after making a discovery. Our sequential Gibbs sampling method has considerably more false discoveries than LBORD but still lies well below the global $\alpha = 0.10$ threshold.   
+As we see in *Figure 6* we are able to see that the most conservative methods ($\alpha$-investing, and LBOND) do not have any false discoveries. LBORD has a few false discoveries, which are likely a result of resetting the thresholds after making a discovery. Our sequential Gibbs sampling method has considerably more false discoveries than LBORD but still lies well below the global $\alpha = 0.10$ threshold.  
 
 \begin{center}
   \begin{figure}[H]
@@ -233,7 +235,7 @@ As we see in *Figure 5* we are able to see that the most conservative methods ($
   \end{figure}
 \end{center}
 
-Where our method really shines is in the power comparisons to the other online hypothesis testing methods. We see that the most conservative methods in terms of FDP are also the least powerful methods. LBORD has a considerable amount of power ($\sim 0.42$) while retaining a lower FDP than our method, but our sequential Gibbs method has considerably higher power than LBORD ($\sim 0.78$). The relative power between the different online testing methods can be seen in *Figure 6*.
+Where our method is an improvement over existing methods is when comparing the power to the other online hypothesis testing methods. We see that the most conservative methods in terms of FDP are also the least powerful methods. LBORD has a considerable amount of power ($\sim 0.42$) while retaining a lower FDP than our method, but our sequential Gibbs method has considerably higher power than LBORD ($\sim 0.78$). The relative power between the different online testing methods can be seen in *Figure 7*.
 
 \begin{center}
   \begin{figure}[H]
@@ -250,12 +252,11 @@ It should be noted that there is no absolute guarantee that the bounds of the cr
 
 With these caveats we propose a number of extensions and future directions for the development of our method:
 
-1. Explore the impact of correlation within the signals. It is known that these correlations adversely affect the performance $\alpha$-investing and LBOND/LBORD in terms of their FDR control. These correlations could be set in such a way that the statistics are drawn from a Markov chain such that the stationary distribution is identical to the mixture distribution, or that there is simply a block of time during which many of the signals occur. 
+1. Explore the impact of correlation within the signals. It is known that these correlations adversely affect the performance $\alpha$-investing and LBOND/LBORD in terms of their FDR control. These correlations could be set in such a way that the statistics are drawn from a Markov chain such that the stationary distribution is identical to the mixture distribution, or that there is simply a block of time during which many of the signals occur.
 
 2. Running the Gibbs sampler ``sparsely''. We currently estimate the model at every time step, which means that we are performing a greater number of operations as the amount of data is increasing. We could potentially relax the invariant that we must re-estimate the model at each time-point, and instead estimate the model every $k$ timepoints. We could potentially fit some decreasing function like LBOND/LBORD in between the parameter estimation in order to maintain proper FDR control.  
 
-<!-- TODO : check statement on distributional requirements  -->
-3. Explore different model assumptions for the distribution of test statistics. While a mixture of normal distributions is mathematically convenient, it may not accurately represent the underlying distribution of the test statistics. One advantage of heuristic-based methods such as $\alpha$-investing and LBOND/LBORD is that there are essentially no distributional requirements on the test statistics themselves but in that the P-values come from a uniform distribution when null. Our method may be adaptable to different assumptions for the distribution of test statistics as well. 
+3. Explore different model assumptions for the distribution of test statistics. While a mixture of normal distributions is mathematically convenient, it may not accurately represent the underlying distribution of the test statistics. One advantage of heuristic-based methods such as $\alpha$-investing and LBOND/LBORD is that there are essentially no distributional requirements on the test statistics themselves, but rather that the p-values from the null distribution follow the Uniform distribution. Our method may be adaptable to different assumptions for the distribution of test statistics as well. 
 
 ## Code for Simulation and Replicability
 
